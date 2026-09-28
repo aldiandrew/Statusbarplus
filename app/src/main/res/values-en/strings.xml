@@ -25,7 +25,12 @@
     <string name="active">Active • using an Android status-bar notification.</string>
     <string name="inactive">Inactive.</string>
     <string name="notification_description">Current day</string>
-    <string name="choose_calendar">Choose calendar app</string>
+    <string name="pro_format_title">Pro date format</string>
+    <string name="pro_format_body">Choose the date format shown in the status bar.</string>
+    <string name="pro_format_d">1</string>
+    <string name="pro_format_dd">01</string>
+    <string name="pro_format_d_mmm">1 Sep</string>
+    <string name="pro_format_dd_mmm">01 Sep</string>
     <string name="note">Text size adapts to the device status-bar area so it stays readable without clipping. This mode uses a normal Android notification.</string>
     <string name="guide_title">How to use Statusbarplus</string>
     <string name="guide_body">1. Turn on “Show day”.\n\n2. Choose the status-bar content: day, day + date, day + date + month, or date + month.\n\n3. Adjust the text size. It adapts to the device status-bar space so it remains readable without clipping.\n\n4. Choose the system font or import your own TTF/OTF font.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>
