@@ -10,13 +10,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.os.Build
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlin.math.min
 
 object DayNotificationManager {
     private const val CHANNEL_ID = "day_status_bar"
@@ -106,21 +106,11 @@ object DayNotificationManager {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
 
-        /*
-         * The reference app uses the notification small-icon slot as a tiny
-         * text canvas.  Do the same here: render text directly into the icon
-         * instead of using a normal notification glyph.
-         *
-         * IMPORTANT:
-         * - "day" stays on one line.
-         * - every other mode is deliberately two lines.
-         * - the requested text size is NOT reduced based on the number of
-         *   characters.  This keeps the glyph visually consistent with the
-         *   device clock as far as Android's fixed notification slot allows.
-         */
+        // Android controls the final small-icon slot. Keep the requested
+        // vertical text size as large as possible and compress horizontally
+        // before shrinking the font, so long localized names remain legible.
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
         val requestedSp = sizeSp.coerceIn(12f, 22f)
-        val textSizePx = requestedSp * scaledDensity
 
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
@@ -131,23 +121,27 @@ object DayNotificationManager {
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             color = android.graphics.Color.WHITE
-            typeface = FontManager.getTypeface(context)
+            typeface = Typeface.create(FontManager.getTypeface(context), Typeface.BOLD)
             textAlign = Paint.Align.CENTER
-            textSize = textSizePx.coerceAtLeast(1f)
+            textSize = requestedSp * scaledDensity
         }
 
-        val horizontalPadding = canvasSize * 0.05f
+        val horizontalPadding = canvasSize * 0.03f
         val maxWidth = canvasSize - horizontalPadding * 2f
-
-        /*
-         * Keep the same base font size for both lines. Only reduce it when a
-         * particular line physically cannot fit inside the icon canvas.
-         * This is different from the old implementation which derived a much
-         * smaller size from status-bar height.
-         */
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
+
+        // Preserve vertical size first. A horizontal scale is much less
+        // destructive to readability than reducing the whole glyph size.
         if (widestLine > maxWidth && widestLine > 0f) {
-            paint.textSize *= maxWidth / widestLine
+            paint.textScaleX = (maxWidth / widestLine).coerceAtLeast(0.55f)
+        }
+
+        // If even a condensed line cannot fit, reduce the text size only as
+        // the final fallback. This prevents long weekday names disappearing.
+        val fittedWidth = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
+        if (fittedWidth > maxWidth && fittedWidth > 0f) {
+            paint.textSize *= maxWidth / fittedWidth
+            paint.textScaleX = 1f
         }
 
         val bitmap = Bitmap.createBitmap(
@@ -162,11 +156,6 @@ object DayNotificationManager {
             val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
             canvas.drawText(lines[0], canvasSize / 2f, baseline, paint)
         } else {
-            /*
-             * Two lines use the full icon height.  The baseline positions are
-             * calculated from real font metrics so the two lines stay visually
-             * centered rather than being pushed toward the top/bottom.
-             */
             val lineHeight = metrics.descent - metrics.ascent
             val totalHeight = lineHeight * 2f
             val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
