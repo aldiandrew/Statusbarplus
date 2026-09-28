@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Statusbarplus</string>
+    <string name="accessibility_description">Menampilkan nama hari sebagai teks di status bar tanpa root atau Xposed.</string>
+</resources>
