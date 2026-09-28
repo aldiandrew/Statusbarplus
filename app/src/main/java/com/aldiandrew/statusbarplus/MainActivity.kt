@@ -210,6 +210,22 @@ class MainActivity : AppCompatActivity() {
             lp(10)
         )
 
+        if (BuildConfig.IS_PRO) {
+            content.addView(
+                card().apply {
+                    addView(box().apply {
+                        addView(text(getString(R.string.pro_format_title), 17f, true), lp())
+                        addView(text(getString(R.string.pro_format_body), 13f, false), lp(3))
+                        addView(MaterialButton(this@MainActivity).apply {
+                            text = proDateFormatLabel()
+                            setOnClickListener { showProDateFormatChooser() }
+                        }, lp(8))
+                    })
+                },
+                lp(10)
+            )
+        }
+
         content.addView(
             card().apply {
                 addView(box().apply {
@@ -457,6 +473,42 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }.start()
+    }
+
+    private fun proDateFormatLabel(): String = when (prefs.getString("pro_date_format", "d")) {
+        "dd" -> getString(R.string.pro_format_dd)
+        "d MMM" -> getString(R.string.pro_format_d_mmm)
+        "dd MMM" -> getString(R.string.pro_format_dd_mmm)
+        else -> getString(R.string.pro_format_d)
+    }
+
+    private fun showProDateFormatChooser() {
+        val choices = arrayOf(
+            getString(R.string.pro_format_d),
+            getString(R.string.pro_format_dd),
+            getString(R.string.pro_format_d_mmm),
+            getString(R.string.pro_format_dd_mmm)
+        )
+        val selected = when (prefs.getString("pro_date_format", "d")) {
+            "dd" -> 1
+            "d MMM" -> 2
+            "dd MMM" -> 3
+            else -> 0
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.pro_format_title))
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                val format = when (which) {
+                    1 -> "dd"
+                    2 -> "d MMM"
+                    3 -> "dd MMM"
+                    else -> "d"
+                }
+                prefs.edit().putString("pro_date_format", format).apply()
+                DayNotificationManager.show(this)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun themeLabel() = when (prefs.getString("theme_mode", "system")) {
