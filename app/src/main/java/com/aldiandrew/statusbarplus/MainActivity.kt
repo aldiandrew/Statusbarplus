@@ -199,6 +199,36 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
+                    addView(text(getString(R.string.layout_title), 17f, true), lp())
+                    addView(text(getString(R.string.layout_body), 13f, false), lp(3))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = presetLabel()
+                        setOnClickListener { showPresetChooser() }
+                    }, lp(8))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = alignmentLabel()
+                        setOnClickListener { showAlignmentChooser() }
+                    }, lp(4))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = getString(R.string.reset_layout)
+                        setOnClickListener { applyPreset("classic") }
+                    }, lp(4))
+                    addView(text(getString(R.string.horizontal_offset), 13f, false), lp(8))
+                    addView(layoutSlider("horizontal_offset", -12f, 12f, 0f) { getString(R.string.offset_value, it.toInt()) }, lp(2))
+                    addView(text(getString(R.string.vertical_offset), 13f, false), lp(8))
+                    addView(layoutSlider("vertical_offset", -12f, 12f, 0f) { getString(R.string.offset_value, it.toInt()) }, lp(2))
+                    addView(text(getString(R.string.layout_padding), 13f, false), lp(8))
+                    addView(layoutSlider("layout_padding", 0f, 18f, 4f) { getString(R.string.padding_value, it.toInt()) }, lp(2))
+                    addView(text(getString(R.string.line_spacing), 13f, false), lp(8))
+                    addView(layoutSlider("line_spacing", -6f, 12f, 0f) { getString(R.string.spacing_value, it.toInt()) }, lp(2))
+                })
+            },
+            lp(10)
+        )
+
+        content.addView(
+            card().apply {
+                addView(box().apply {
                     addView(text(getString(R.string.background_title), 17f, true), lp())
                     addView(text(getString(R.string.background_body), 13f, false), lp(3))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
@@ -507,6 +537,99 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .show()
+    }
+
+    private fun presetLabel(): String = when (prefs.getString("layout_preset", "classic")) {
+        "minimal" -> getString(R.string.preset_minimal)
+        "compact" -> getString(R.string.preset_compact)
+        else -> getString(R.string.preset_classic)
+    }
+
+    private fun alignmentLabel(): String = when (prefs.getString("text_alignment", "center")) {
+        "left" -> getString(R.string.align_left)
+        "right" -> getString(R.string.align_right)
+        else -> getString(R.string.align_center)
+    }
+
+    private fun showPresetChooser() {
+        val choices = arrayOf(
+            getString(R.string.preset_minimal),
+            getString(R.string.preset_compact),
+            getString(R.string.preset_classic)
+        )
+        val selected = when (prefs.getString("layout_preset", "classic")) {
+            "minimal" -> 0
+            "compact" -> 1
+            else -> 2
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.preset_title))
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                applyPreset(when (which) {
+                    0 -> "minimal"
+                    1 -> "compact"
+                    else -> "classic"
+                })
+                dialog.dismiss()
+            }.show()
+    }
+
+    private fun applyPreset(name: String) {
+        val values = when (name) {
+            "minimal" -> arrayOf(0f, 0f, 2f, 0f)
+            "compact" -> arrayOf(0f, 0f, 6f, -1f)
+            else -> arrayOf(0f, 0f, 4f, 0f)
+        }
+        prefs.edit()
+            .putString("layout_preset", name)
+            .putFloat("horizontal_offset", values[0])
+            .putFloat("vertical_offset", values[1])
+            .putFloat("layout_padding", values[2])
+            .putFloat("line_spacing", values[3])
+            .apply()
+        DayNotificationManager.show(this)
+        recreate()
+    }
+
+    private fun showAlignmentChooser() {
+        val choices = arrayOf(
+            getString(R.string.align_left),
+            getString(R.string.align_center),
+            getString(R.string.align_right)
+        )
+        val selected = when (prefs.getString("text_alignment", "center")) {
+            "left" -> 0
+            "right" -> 2
+            else -> 1
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.alignment_title))
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                prefs.edit().putString(
+                    "text_alignment",
+                    when (which) { 0 -> "left"; 2 -> "right"; else -> "center" }
+                ).putString("layout_preset", "custom").apply()
+                DayNotificationManager.show(this)
+                dialog.dismiss()
+                recreate()
+            }.show()
+    }
+
+    private fun layoutSlider(
+        key: String,
+        min: Float,
+        max: Float,
+        default: Float,
+        label: (Float) -> String
+    ): Slider = Slider(this).apply {
+        valueFrom = min
+        valueTo = max
+        stepSize = 1f
+        value = prefs.getFloat(key, default).coerceIn(min, max)
+        addOnChangeListener { _, value, _ ->
+            prefs.edit().putFloat(key, value).putString("layout_preset", "custom").apply()
+            DayNotificationManager.show(this@MainActivity)
+        }
     }
 
     private fun themeLabel() = when (prefs.getString("theme_mode", "system")) {
