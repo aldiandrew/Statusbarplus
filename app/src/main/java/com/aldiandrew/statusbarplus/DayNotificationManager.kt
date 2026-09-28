@@ -47,8 +47,18 @@ object DayNotificationManager {
             else -> day
         }
 
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            1603,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(icon)
+            .setContentIntent(contentIntent)
             .setContentTitle(title)
             .setContentText(context.getString(R.string.notification_description))
             .setOngoing(true)
