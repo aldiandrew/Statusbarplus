@@ -40,17 +40,28 @@ object DayNotificationManager {
             createTextIcon(context, day, date, month, mode, sizeSp)
         )
 
-        val calendarIntent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_APP_CALENDAR)
+        val calendarIntent = Intent.makeMainSelectorActivity(
+            Intent.ACTION_MAIN,
+            Intent.CATEGORY_APP_CALENDAR
+        ).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        val launchIntent = if (context.packageManager.queryIntentActivities(calendarIntent, 0).isNotEmpty()) {
-            Intent.createChooser(calendarIntent, context.getString(R.string.choose_calendar))
+
+        val launchIntent = if (
+            context.packageManager.queryIntentActivities(calendarIntent, 0).isNotEmpty()
+        ) {
+            Intent.createChooser(
+                calendarIntent,
+                context.getString(R.string.choose_calendar)
+            )
         } else {
             Intent(context, MainActivity::class.java)
         }
-        val intent = PendingIntent.getActivity(
-            context, 0, launchIntent,
+
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            0,
+            launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -65,7 +76,7 @@ object DayNotificationManager {
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(context.getString(R.string.notification_description))
-            .setContentIntent(intent)
+            .setContentIntent(contentIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
@@ -114,7 +125,6 @@ object DayNotificationManager {
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
-
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
         val requestedSp = sizeSp.coerceIn(12f, 22f)
 
@@ -132,8 +142,7 @@ object DayNotificationManager {
             textSize = requestedSp * scaledDensity
         }
 
-        val horizontalPadding = canvasSize * 0.03f
-        val maxWidth = canvasSize - horizontalPadding * 2f
+        val maxWidth = canvasSize * 0.94f
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
 
         if (widestLine > maxWidth && widestLine > 0f) {
@@ -161,9 +170,8 @@ object DayNotificationManager {
             val lineHeight = metrics.descent - metrics.ascent
             val totalHeight = lineHeight * 2f
             val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
-            val secondBaseline = firstBaseline + lineHeight
             canvas.drawText(lines[0], canvasSize / 2f, firstBaseline, paint)
-            canvas.drawText(lines[1], canvasSize / 2f, secondBaseline, paint)
+            canvas.drawText(lines[1], canvasSize / 2f, firstBaseline + lineHeight, paint)
         }
 
         return bitmap
@@ -188,7 +196,8 @@ object DayNotificationManager {
     }
 
     private fun pendingIntent(context: Context) = PendingIntent.getBroadcast(
-        context, 1602,
+        context,
+        1602,
         Intent(context, DayNotificationReceiver::class.java).setAction(ACTION_DAY_CHANGED),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
