@@ -26,12 +26,12 @@
     <string name="active">Aktif • menggunakan notifikasi status bar Android.</string>
     <string name="inactive">Tidak aktif.</string>
     <string name="notification_description">Hari saat ini</string>
-    <string name="pro_format_title">Format tanggal Pro</string>
-    <string name="pro_format_body">Pilih format tanggal yang ditampilkan pada status bar.</string>
-    <string name="pro_format_d">1</string>
-    <string name="pro_format_dd">01</string>
-    <string name="pro_format_d_mmm">1 Sep</string>
-    <string name="pro_format_dd_mmm">01 Sep</string>
+    <string name="format_title">Format tanggal</string>
+    <string name="format_body">Pilih format tanggal yang ditampilkan pada status bar.</string>
+    <string name="format_d">1</string>
+    <string name="format_dd">01</string>
+    <string name="format_d_mmm">1 Sep</string>
+    <string name="format_dd_mmm">01 Sep</string>
     <string name="note">Ukuran teks menyesuaikan ukuran area status bar perangkat agar tetap jelas dan tidak terpotong. Mode ini menggunakan notifikasi Android biasa.</string>
     <string name="guide_title">Cara menggunakan Statusbarplus</string>
     <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Pilih isi status bar: hari, hari + tanggal, hari + tanggal + bulan, atau tanggal + bulan.\n\n3. Atur ukuran teks. Ukuran akan menyesuaikan ruang status bar perangkat agar tetap terbaca dan tidak terpotong.\n\n4. Pilih font sistem atau impor font TTF/OTF sendiri.\n\n5. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
@@ -49,3 +49,21 @@
     
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
 </resources>
+    <string name="layout_title">Posisi dan tata letak</string>
+    <string name="layout_body">Atur perataan, offset, padding, dan jarak antarbaris. Pengaturan ini mengubah posisi teks di dalam ikon notifikasi; posisi slot notifikasi terhadap jam tetap dikendalikan Android System UI.</string>
+    <string name="preset_title">Preset tampilan</string>
+    <string name="preset_minimal">Minimal</string>
+    <string name="preset_compact">Compact</string>
+    <string name="preset_classic">Classic</string>
+    <string name="reset_layout">Reset</string>
+    <string name="alignment_title">Alignment</string>
+    <string name="align_left">Kiri</string>
+    <string name="align_center">Tengah</string>
+    <string name="align_right">Kanan</string>
+    <string name="horizontal_offset">Horizontal offset</string>
+    <string name="vertical_offset">Vertical offset</string>
+    <string name="layout_padding">Padding</string>
+    <string name="line_spacing">Spacing antarbaris</string>
+    <string name="offset_value">%1$d dp</string>
+    <string name="padding_value">%1$d dp</string>
+    <string name="spacing_value">%1$d dp</string>
