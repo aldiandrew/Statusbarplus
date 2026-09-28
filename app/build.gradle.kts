@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldiandrew.statusbarplus"
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0"
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 4
+        versionName = "2.1"
     }
 
     compileOptions {
