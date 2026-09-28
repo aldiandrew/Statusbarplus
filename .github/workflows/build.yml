@@ -35,7 +35,7 @@ jobs:
 
       - name: Verify APK
         run: |
-          mapfile -t apks < <(find app/build/outputs/apk -type f -name 'app-*-optimizedDebug.apk' | sort)
+          mapfile -t apks < <(find app/build/outputs/apk -type f -name 'app-optimizedDebug.apk' | sort)
           test "${#apks[@]}" -eq 1
           for apk in "${apks[@]}"; do
             $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 "$apk"
@@ -44,11 +44,11 @@ jobs:
 
       - name: Report APK size
         run: |
-          find app/build/outputs/apk -type f -name 'app-*-optimizedDebug.apk' -print -exec du -h {} \;
+          find app/build/outputs/apk -type f -name 'app-optimizedDebug.apk' -print -exec du -h {} \;
 
       - uses: actions/upload-artifact@v4
         with:
           name: Statusbarplus
           path: |
-            app/build/outputs/apk/**/app-*-optimizedDebug.apk
+            app/build/outputs/apk/**/app-optimizedDebug.apk
           retention-days: 7
