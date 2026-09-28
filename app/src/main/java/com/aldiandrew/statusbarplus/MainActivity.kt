@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         applyThemeMode()
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
+        configureSystemBars()
         buildUi()
         requestNotificationPermissionIfNeeded()
         showFirstUseGuideIfNeeded()
@@ -53,6 +55,21 @@ class MainActivity : AppCompatActivity() {
             updateState()
             updateBackgroundState()
         }
+    }
+
+    private fun configureSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        val dark = when (prefs.getString("theme_mode", "system")) {
+            "dark" -> true
+            "light" -> false
+            else -> (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+        controller.isAppearanceLightStatusBars = !dark
+        controller.isAppearanceLightNavigationBars = !dark
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
     }
 
     private fun buildUi() {
@@ -260,7 +277,7 @@ class MainActivity : AppCompatActivity() {
             "date_month" -> "$date\n$month"
             else -> day
         }
-        preview.typeface = FontManager.getTypeface(this)
+        preview.typeface = android.graphics.Typeface.create(FontManager.getTypeface(this), android.graphics.Typeface.BOLD)
         preview.textSize = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
     }
 
