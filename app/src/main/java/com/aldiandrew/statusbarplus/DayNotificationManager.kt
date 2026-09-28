@@ -31,10 +31,10 @@ object DayNotificationManager {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
         val mode = prefs.getString("display_mode", "day") ?: "day"
-        val day = SimpleDateFormat("EEE", locale).format(Date())
-        val datePattern = prefs.getString("date_format", "d") ?: "d"
-        val date = SimpleDateFormat(datePattern, locale).format(Date())
-        val month = SimpleDateFormat("MMM", locale).format(Date())
+        val now = Date()
+        val day = SimpleDateFormat("EEE", locale).format(now)
+        val date = SimpleDateFormat("d", locale).format(now)
+        val month = SimpleDateFormat("MMM", locale).format(now)
         val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
 
         val icon = Icon.createWithBitmap(
@@ -43,7 +43,6 @@ object DayNotificationManager {
 
         val title = when (mode) {
             "day_date" -> "$day $date"
-            "day_date_month" -> "$day $date $month"
             "date_month" -> "$date $month"
             else -> day
         }
@@ -65,7 +64,8 @@ object DayNotificationManager {
     }
 
     fun cancel(context: Context) {
-        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(NOTIFICATION_ID)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .cancel(NOTIFICATION_ID)
         cancelAlarm(context)
     }
 
@@ -81,7 +81,7 @@ object DayNotificationManager {
                     "Hari di status bar",
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Menampilkan hari sebagai ikon teks di status bar."
+                    description = "Menampilkan informasi kalender sebagai ikon teks di status bar."
                     setShowBadge(false)
                     setSound(null, null)
                     enableVibration(false)
@@ -107,11 +107,9 @@ object DayNotificationManager {
         val horizontalOffset = prefs.getFloat("horizontal_offset", 0f).coerceIn(-12f, 12f) * density
         val verticalOffset = prefs.getFloat("vertical_offset", 0f).coerceIn(-12f, 12f) * density
         val lineSpacing = prefs.getFloat("line_spacing", 0f).coerceIn(-6f, 12f) * scaledDensity
-        val alignment = prefs.getString("text_alignment", "center") ?: "center"
 
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
-            "day_date_month" -> listOf(day, "$date $month")
             "date_month" -> listOf(date, month)
             else -> listOf(day)
         }
@@ -125,7 +123,6 @@ object DayNotificationManager {
 
         val maxWidth = canvasSize * (1f - (padding / 48f)).coerceIn(0.55f, 0.96f)
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
-
         if (widestLine > maxWidth && widestLine > 0f) {
             paint.textScaleX = (maxWidth / widestLine).coerceAtLeast(0.55f)
         }
@@ -136,19 +133,10 @@ object DayNotificationManager {
             paint.textScaleX = 1f
         }
 
-        val bitmap = Bitmap.createBitmap(
-            canvasSize,
-            canvasSize,
-            Bitmap.Config.ARGB_8888
-        )
+        val bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val metrics = paint.fontMetrics
-
-        val x = when (alignment) {
-            "left" -> padding * density + horizontalOffset
-            "right" -> canvasSize - padding * density + horizontalOffset
-            else -> canvasSize / 2f + horizontalOffset
-        }
+        val x = canvasSize / 2f + horizontalOffset
 
         if (lines.size == 1) {
             val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f + verticalOffset
