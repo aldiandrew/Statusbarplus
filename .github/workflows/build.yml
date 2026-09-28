@@ -38,22 +38,20 @@ jobs:
 
       - name: Verify APK
         run: |
-          test -s app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
-          test -s app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
+          mapfile -t apks < <(find app/build/outputs/apk -type f -name 'app-*-optimizedDebug.apk' | sort)
+          test "${#apks[@]}" -eq 2
+          for apk in "${apks[@]}"; do
+            $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 "$apk"
+            $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$apk"
+          done
 
       - name: Report APK size
         run: |
-          du -h app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
-          du -h app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
+          find app/build/outputs/apk -type f -name 'app-*-optimizedDebug.apk' -print -exec du -h {} \;
 
       - uses: actions/upload-artifact@v4
         with:
           name: Statusbarplus-free-and-pro
           path: |
-            app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
-            app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
+            app/build/outputs/apk/**/app-*-optimizedDebug.apk
           retention-days: 7
