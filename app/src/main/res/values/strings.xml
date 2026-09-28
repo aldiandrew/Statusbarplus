@@ -2,14 +2,18 @@
 <resources>
     <string name="app_name">Statusbarplus</string>
     <string name="subtitle">Hari di status bar</string>
-    <string name="hero_title">Hari, tanpa menimpa jam</string>
-    <string name="hero_body">Mengikuti mekanisme notifikasi Android seperti DateBar. Tidak memakai Accessibility Service, overlay, root, atau Xposed.</string>
+    <string name="hero_title">Hari, seperti notifikasi sistem</string>
+    <string name="hero_body">Menampilkan hari sebagai notifikasi status bar, mengikuti font sistem perangkat dan tanpa Accessibility Service, overlay, root, atau Xposed.</string>
     <string name="preview_title">Pratinjau</string>
-    <string name="preview_body">Hari mengikuti bahasa dan locale perangkat. SystemUI menentukan posisi notifikasi sehingga hari tidak dihitung menimpa jam.</string>
+    <string name="preview_body">Font mengikuti font default perangkat. Ukuran dibuat lebih besar agar lebih mudah dibaca di slot status bar.</string>
     <string name="show_day">Tampilkan hari</string>
     <string name="notification_settings">Pengaturan notifikasi</string>
+    <string name="background_title">Berjalan di latar belakang</string>
+    <string name="background_body">Izinkan Statusbarplus melewati optimasi baterai agar notifikasi dan pembaruan tengah malam tidak mudah dihentikan atau ditunda sistem.</string>
+    <string name="background_allow">Izinkan penggunaan latar belakang</string>
+    <string name="background_allowed">Penggunaan latar belakang diizinkan.</string>
     <string name="display_title">Tampilan hari</string>
-    <string name="short_day">Singkat (Sen, Mon, dll.)</string>
+    <string name="short_day">Hari singkat</string>
     <string name="text_size">Ukuran teks: %1$d sp</string>
     <string name="theme_title">Tema aplikasi</string>
     <string name="theme_system">Sistem</string>
@@ -19,6 +23,5 @@
     <string name="active">Aktif • menggunakan notifikasi status bar Android.</string>
     <string name="inactive">Tidak aktif.</string>
     <string name="notification_description">Hari saat ini</string>
-    <string name="note">Catatan: tidak ada Accessibility Service dan tidak ada overlay. Saat status bar disembunyikan oleh aplikasi fullscreen, ikon hari ikut disembunyikan. Opsi warna teks/jam dihapus.</string>
-    <string name="accessibility_description">Tidak digunakan.</string>
+    <string name="note">Catatan: SystemUI tetap menentukan posisi ikon notifikasi. Aplikasi tidak menggunakan Accessibility Service atau overlay.</string>
 </resources>
