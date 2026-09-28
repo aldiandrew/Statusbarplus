@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Statusbarplus</string>
+    <string name="subtitle">Day in status bar</string>
+    <string name="hero_title">Day, like a system notification</string>
+    <string name="hero_body">Shows the day as a status-bar notification, following the device system font without Accessibility Service, overlay, root, or Xposed.</string>
+    <string name="show_day">Show day</string>
+    <string name="notification_settings">Notification settings</string>
+    <string name="background_title">Background operation</string>
+    <string name="background_body">Optionally allow Statusbarplus to bypass battery optimization so the daily update is less likely to be delayed by the system.</string>
+    <string name="background_allow">Allow background operation</string>
+    <string name="background_allowed">Background operation allowed.</string>
+    <string name="display_title">Day display</string>
+    <string name="short_day">Short day name</string>
+    <string name="text_size">Status-bar text size: %1$d sp</string>
+    <string name="display_mode_title">Status-bar content</string>
+    <string name="mode_day">Day only</string>
+    <string name="mode_day_date">Day + date</string>
+    <string name="mode_day_date_month">Day + date + month</string>
+    <string name="mode_date_month">Date + month</string>
+    <string name="theme_title">App theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="permission_needed">Notification permission is required to show the day in the status bar.</string>
+    <string name="active">Active • using an Android status-bar notification.</string>
+    <string name="inactive">Inactive.</string>
+    <string name="notification_description">Current day</string>
+    <string name="note">Note: SystemUI controls the notification icon position. The size is automatically adapted to the device status-bar scale.</string>
+    <string name="guide_title">How to use Statusbarplus</string>
+    <string name="guide_body">1. Turn on “Show day”.\n\n2. Allow notifications when Android asks. This permission is required because the day/date is displayed as a notification icon in the status bar.\n\n3. Choose the status-bar content and text size. The size is automatically fitted to avoid clipping.\n\n4. If your device often stops background apps, open “Allow background operation” and grant the battery-optimization exemption. This is optional.\n\nThe app does not use Accessibility Service, overlays, root, or a continuously running service. It updates when settings change and around the start of a new day.</string>
+    <string name="guide_continue">Continue</string>
+    <string name="guide_later">Later</string>
+</resources>
