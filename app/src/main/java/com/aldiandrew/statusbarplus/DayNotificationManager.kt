@@ -106,50 +106,75 @@ object DayNotificationManager {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
 
-        // Keep every display mode on a single line. SystemUI gives notification
-        // icons a fixed slot, so the complete text is fitted as one unit.
+        /*
+         * The reference app uses the notification small-icon slot as a tiny
+         * text canvas.  Do the same here: render text directly into the icon
+         * instead of using a normal notification glyph.
+         *
+         * IMPORTANT:
+         * - "day" stays on one line.
+         * - every other mode is deliberately two lines.
+         * - the requested text size is NOT reduced based on the number of
+         *   characters.  This keeps the glyph visually consistent with the
+         *   device clock as far as Android's fixed notification slot allows.
+         */
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
+        val requestedSp = sizeSp.coerceIn(12f, 22f)
+        val textSizePx = requestedSp * scaledDensity
 
-        val statusBarId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        val statusBarHeight = if (statusBarId != 0) {
-            context.resources.getDimensionPixelSize(statusBarId).toFloat()
-        } else {
-            24f * density
-        }
-
-        // Base the requested size on the device's own status-bar clock area.
-        val systemClockSp = ((statusBarHeight / scaledDensity) * 0.68f).coerceIn(16f, 24f)
-        val requested = sizeSp.coerceIn(12f, 22f)
-        val requestedPx = (systemClockSp * (requested / 22f)) * scaledDensity
-
-        val text = when (mode) {
-            "day_date" -> "$day $date"
-            "day_date_month" -> "$day $date $month"
-            "date_month" -> "$date $month"
-            else -> day
+        val lines = when (mode) {
+            "day_date" -> listOf(day, date)
+            "day_date_month" -> listOf(day, "$date $month")
+            "date_month" -> listOf(date, month)
+            else -> listOf(day)
         }
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             color = android.graphics.Color.WHITE
             typeface = FontManager.getTypeface(context)
             textAlign = Paint.Align.CENTER
-            textSize = requestedPx.coerceAtLeast(1f)
+            textSize = textSizePx.coerceAtLeast(1f)
         }
 
-        // Fit the complete line once instead of shrinking individual parts.
-        // This prevents one part from being unnecessarily reduced because a
-        // previous line was long.
-        val maxWidth = canvasSize * 0.96f
-        val measured = paint.measureText(text)
-        if (measured > maxWidth && measured > 0f) {
-            paint.textSize *= maxWidth / measured
+        val horizontalPadding = canvasSize * 0.05f
+        val maxWidth = canvasSize - horizontalPadding * 2f
+
+        /*
+         * Keep the same base font size for both lines. Only reduce it when a
+         * particular line physically cannot fit inside the icon canvas.
+         * This is different from the old implementation which derived a much
+         * smaller size from status-bar height.
+         */
+        val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
+        if (widestLine > maxWidth && widestLine > 0f) {
+            paint.textSize *= maxWidth / widestLine
         }
 
-        val metrics = paint.fontMetrics
-        val bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(
+            canvasSize,
+            canvasSize,
+            Bitmap.Config.ARGB_8888
+        )
         val canvas = Canvas(bitmap)
-        val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
-        canvas.drawText(text, canvasSize / 2f, baseline, paint)
+        val metrics = paint.fontMetrics
+
+        if (lines.size == 1) {
+            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
+            canvas.drawText(lines[0], canvasSize / 2f, baseline, paint)
+        } else {
+            /*
+             * Two lines use the full icon height.  The baseline positions are
+             * calculated from real font metrics so the two lines stay visually
+             * centered rather than being pushed toward the top/bottom.
+             */
+            val lineHeight = metrics.descent - metrics.ascent
+            val totalHeight = lineHeight * 2f
+            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
+            val secondBaseline = firstBaseline + lineHeight
+            canvas.drawText(lines[0], canvasSize / 2f, firstBaseline, paint)
+            canvas.drawText(lines[1], canvasSize / 2f, secondBaseline, paint)
+        }
+
         return bitmap
     }
 
