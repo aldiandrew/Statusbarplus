@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity() {
             MaterialToolbar(this).apply {
                 title = getString(R.string.app_name)
                 subtitle = getString(R.string.subtitle)
-                setTitleTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleLarge)
-                setSubtitleTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                setTitleTextAppearance(this@MainActivity, com.google.android.material.R.style.TextAppearance_Material3_TitleLarge)
+                setSubtitleTextAppearance(this@MainActivity, com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
                 elevation = 0f
             },
             LinearLayout.LayoutParams(-1, dp(64f))
