@@ -17,6 +17,7 @@ import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
@@ -235,7 +236,7 @@ class StatusBarTextAccessibilityService : AccessibilityService() {
         return null
     }
 
-    private fun findClockNode(node: android.view.accessibility.AccessibilityNodeInfo): android.view.accessibility.AccessibilityNodeInfo? {
+    private fun findClockNode(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         val id = node.viewIdResourceName.orEmpty()
         val className = node.className?.toString().orEmpty()
         val text = node.text?.toString().orEmpty()
