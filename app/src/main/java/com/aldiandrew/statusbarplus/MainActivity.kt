@@ -1,9 +1,11 @@
 package com.aldiandrew.statusbarplus
 
-import android.accessibilityservice.AccessibilityServiceInfo
-import android.content.ComponentName
+import android.Manifest
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -12,6 +14,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -25,35 +28,32 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
     private val prefs by lazy { getSharedPreferences("settings", Context.MODE_PRIVATE) }
 
-    private lateinit var root: LinearLayout
     private lateinit var serviceSwitch: MaterialSwitch
     private lateinit var serviceStatus: TextView
-    private lateinit var themeButton: MaterialButton
-    private lateinit var autoPositionSwitch: MaterialSwitch
-    private lateinit var offsetLabel: TextView
-    private lateinit var offsetSlider: Slider
     private lateinit var previewText: TextView
+    private lateinit var sizeLabel: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyThemeMode()
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         buildUi()
+        requestNotificationPermissionIfNeeded()
     }
 
     override fun onResume() {
         super.onResume()
-        if (::root.isInitialized) updateServiceState()
+        if (::serviceSwitch.isInitialized) updateState()
     }
 
     private fun buildUi() {
-        root = LinearLayout(this).apply {
+        val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
 
         val toolbar = MaterialToolbar(this).apply {
-            title = "Statusbarplus"
-            subtitle = "Hari di status bar"
+            title = getString(R.string.app_name)
+            subtitle = getString(R.string.subtitle)
             elevation = dp(1f).toFloat()
         }
         root.addView(toolbar, LinearLayout.LayoutParams(-1, dp(76f)))
@@ -69,27 +69,24 @@ class MainActivity : AppCompatActivity() {
         val hero = card()
         val heroBox = box()
         hero.addView(heroBox)
-        heroBox.addView(text("Hari, langsung di sebelah jam", 27f, true), lp())
+        heroBox.addView(text(getString(R.string.hero_title), 27f, true), lp())
         heroBox.addView(
-            text(
-                "Posisi dihitung otomatis dari ukuran jam bawaan. Tidak perlu menggeser teks setiap kali format jam berubah.",
-                15f, false
-            ),
-            lp(0, 8)
+            text(getString(R.string.hero_body), 15f, false),
+            lp(8)
         )
         content.addView(hero, lp())
 
         val previewCard = card()
         val previewBox = box()
         previewCard.addView(previewBox)
-        previewBox.addView(text("Pratinjau", 18f, true), lp())
-        previewText = text("", 16f, false)
-        previewBox.addView(previewText, lp(0, 10))
+        previewBox.addView(text(getString(R.string.preview_title), 18f, true), lp())
+        previewText = text("", 18f, false)
+        previewBox.addView(previewText, lp(10))
         previewBox.addView(
-            text("Nama hari mengikuti bahasa/locale perangkat.", 13f, false),
-            lp(0, 4)
+            text(getString(R.string.preview_body), 13f, false),
+            lp(4)
         )
-        content.addView(previewCard, lp(0, 14))
+        content.addView(previewCard, lp(14))
         updatePreview()
 
         val serviceCard = card()
@@ -97,95 +94,59 @@ class MainActivity : AppCompatActivity() {
         serviceCard.addView(serviceBox)
 
         serviceSwitch = MaterialSwitch(this).apply {
-            text = "Tampilkan hari"
+            text = getString(R.string.show_day)
             textSize = 17f
-            isChecked = isServiceEnabled()
-            setOnCheckedChangeListener { _, _ -> openAccessibilitySettings() }
+            setOnCheckedChangeListener { _, checked ->
+                if (checked) {
+                    if (!hasNotificationPermission()) {
+                        requestNotificationPermissionIfNeeded()
+                        postDelayedCheck()
+                    } else {
+                        prefs.edit().putBoolean("enabled", true).apply()
+                        DayNotificationManager.show(this@MainActivity)
+                    }
+                } else {
+                    prefs.edit().putBoolean("enabled", false).apply()
+                    DayNotificationManager.cancel(this@MainActivity)
+                }
+                updateState()
+            }
         }
         serviceBox.addView(serviceSwitch, lp())
 
         serviceStatus = text("", 13f, false)
-        serviceBox.addView(serviceStatus, lp(0, 3))
+        serviceBox.addView(serviceStatus, lp(3))
 
-        val openButton = MaterialButton(this).apply {
-            text = "Kelola aksesibilitas"
-            setOnClickListener { openAccessibilitySettings() }
-        }
-        serviceBox.addView(openButton, lp(0, 12))
-        content.addView(serviceCard, lp(0, 14))
-
-        val positionCard = card()
-        val positionBox = box()
-        positionCard.addView(positionBox)
-        positionBox.addView(text("Posisi status bar", 18f, true), lp())
-
-        autoPositionSwitch = MaterialSwitch(this).apply {
-            text = "Sesuaikan otomatis dengan jam"
-            isChecked = !prefs.getBoolean("manual_position", false)
-            setOnCheckedChangeListener { _, checked ->
-                prefs.edit().putBoolean("manual_position", !checked).apply()
-                offsetSlider.isEnabled = !checked
-                offsetLabel.text = if (checked) {
-                    "Otomatis: setelah lebar jam + jarak 7 dp"
-                } else {
-                    "Posisi manual: ${offsetSlider.value.toInt()} dp"
-                }
-                StatusBarAccessibilityService.refresh()
+        val settingsButton = MaterialButton(this).apply {
+            text = getString(R.string.notification_settings)
+            setOnClickListener {
+                startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                })
             }
         }
-        positionBox.addView(autoPositionSwitch, lp(0, 8))
-
-        offsetLabel = text("", 15f, true)
-        positionBox.addView(offsetLabel, lp(0, 8))
-
-        offsetSlider = Slider(this).apply {
-            valueFrom = 35f
-            valueTo = 180f
-            value = prefs.getFloat("offset_dp", 58f)
-            stepSize = 1f
-            isEnabled = prefs.getBoolean("manual_position", false)
-            addOnChangeListener { _, value, _ ->
-                prefs.edit().putFloat("offset_dp", value).apply()
-                offsetLabel.text = "Posisi manual: ${value.toInt()} dp"
-                StatusBarAccessibilityService.refresh()
-            }
-        }
-        offsetLabel.text = if (autoPositionSwitch.isChecked) {
-            "Otomatis: setelah lebar jam + jarak 7 dp"
-        } else {
-            "Posisi manual: ${offsetSlider.value.toInt()} dp"
-        }
-        positionBox.addView(offsetSlider, lp(0, 2))
-        content.addView(positionCard, lp(0, 14))
+        serviceBox.addView(settingsButton, lp(12))
+        content.addView(serviceCard, lp(14))
 
         val formatCard = card()
         val formatBox = box()
         formatCard.addView(formatBox)
-        formatBox.addView(text("Tampilan hari", 18f, true), lp())
+        formatBox.addView(text(getString(R.string.display_title), 18f, true), lp())
 
         val shortSwitch = MaterialSwitch(this).apply {
-            text = "Singkat (Sen)"
-            isChecked = prefs.getBoolean("short_day", false)
+            text = getString(R.string.short_day)
+            isChecked = prefs.getBoolean("short_day", true)
             setOnCheckedChangeListener { _, checked ->
                 prefs.edit().putBoolean("short_day", checked).apply()
-                StatusBarAccessibilityService.refresh()
+                DayNotificationManager.show(this@MainActivity)
                 updatePreview()
             }
         }
-        formatBox.addView(shortSwitch, lp(0, 8))
+        formatBox.addView(shortSwitch, lp(8))
 
-        val darkSwitch = MaterialSwitch(this).apply {
-            text = "Teks hitam"
-            isChecked = prefs.getBoolean("dark_text", false)
-            setOnCheckedChangeListener { _, checked ->
-                prefs.edit().putBoolean("dark_text", checked).apply()
-                StatusBarAccessibilityService.refresh()
-            }
-        }
-        formatBox.addView(darkSwitch, lp(0, 2))
+        sizeLabel = text("", 15f, true)
+        formatBox.addView(sizeLabel, lp(12))
 
-        val sizeLabel = text("", 15f, true)
-        formatBox.addView(sizeLabel, lp(0, 12))
         val sizeSlider = Slider(this).apply {
             valueFrom = 9f
             valueTo = 18f
@@ -193,61 +154,97 @@ class MainActivity : AppCompatActivity() {
             stepSize = 1f
             addOnChangeListener { _, value, _ ->
                 prefs.edit().putFloat("text_size", value).apply()
-                sizeLabel.text = "Ukuran teks: ${value.toInt()} sp"
-                StatusBarAccessibilityService.refresh()
+                sizeLabel.text = getString(R.string.text_size, value.toInt())
+                DayNotificationManager.show(this@MainActivity)
                 updatePreview()
             }
         }
-        sizeLabel.text = "Ukuran teks: ${sizeSlider.value.toInt()} sp"
-        formatBox.addView(sizeSlider, lp(0, 2))
-        content.addView(formatCard, lp(0, 14))
+        sizeLabel.text = getString(R.string.text_size, sizeSlider.value.toInt())
+        formatBox.addView(sizeSlider, lp(2))
+        content.addView(formatCard, lp(14))
 
         val themeCard = card()
         val themeBox = box()
         themeCard.addView(themeBox)
-        themeBox.addView(text("Tema aplikasi", 18f, true), lp())
-        themeButton = MaterialButton(this).apply {
+        themeBox.addView(text(getString(R.string.theme_title), 18f, true), lp())
+        val themeButton = MaterialButton(this).apply {
             text = themeLabel()
             setOnClickListener { showThemeChooser() }
         }
-        themeBox.addView(themeButton, lp(0, 10))
-        content.addView(themeCard, lp(0, 14))
+        themeBox.addView(themeButton, lp(10))
+        content.addView(themeCard, lp(14))
 
         content.addView(
-            text(
-                "Catatan: tanpa root/Xposed, Android tidak memberi API publik untuk mengubah SystemUI asli. Statusbarplus memakai Accessibility Overlay. Overlay otomatis disembunyikan saat layar mati atau jendela aktif terdeteksi fullscreen.",
-                13f, false
-            ),
-            lp(0, 18)
+            text(getString(R.string.note), 13f, false),
+            lp(18)
         )
 
         setContentView(root)
-        updateServiceState()
+        updateState()
     }
 
-    private fun updateServiceState() {
-        val enabled = isServiceEnabled()
+    private fun postDelayedCheck() {
+        window.decorView.postDelayed({ updateState() }, 700)
+    }
+
+    private fun updateState() {
+        val enabled = prefs.getBoolean("enabled", false)
         serviceSwitch.setOnCheckedChangeListener(null)
         serviceSwitch.isChecked = enabled
-        serviceSwitch.setOnCheckedChangeListener { _, _ -> openAccessibilitySettings() }
-        serviceStatus.text = if (enabled) {
-            "Aktif • posisi dan bahasa menyesuaikan otomatis."
-        } else {
-            "Belum aktif • hidupkan layanan untuk menampilkan hari."
+        serviceSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                if (!hasNotificationPermission()) {
+                    requestNotificationPermissionIfNeeded()
+                    postDelayedCheck()
+                } else {
+                    prefs.edit().putBoolean("enabled", true).apply()
+                    DayNotificationManager.show(this)
+                }
+            } else {
+                prefs.edit().putBoolean("enabled", false).apply()
+                DayNotificationManager.cancel(this)
+            }
+            updateState()
+        }
+
+        serviceStatus.text = when {
+            !hasNotificationPermission() -> getString(R.string.permission_needed)
+            enabled -> getString(R.string.active)
+            else -> getString(R.string.inactive)
         }
     }
 
     private fun updatePreview() {
         if (!::previewText.isInitialized) return
-        val short = prefs.getBoolean("short_day", false)
-        val locale = Locale.getDefault()
-        val day = SimpleDateFormat(if (short) "EEE" else "EEEE", locale).format(Date())
-        previewText.text = "21:59   $day"
+        val short = prefs.getBoolean("short_day", true)
+        val pattern = if (short) "EEE" else "EEEE"
+        val day = SimpleDateFormat(pattern, Locale.getDefault()).format(Date())
+        previewText.text = "22:12   $day"
         previewText.textSize = prefs.getFloat("text_size", 13f)
     }
 
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                100
+            )
+        }
+    }
+
+    private fun hasNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT < 33 ||
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
     private fun showThemeChooser() {
-        val choices = arrayOf("Sistem", "Terang", "Gelap")
+        val choices = arrayOf(
+            getString(R.string.theme_system),
+            getString(R.string.theme_light),
+            getString(R.string.theme_dark)
+        )
         val current = prefs.getString("theme_mode", "system")
         val selected = when (current) {
             "light" -> 1
@@ -256,7 +253,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("Pilih tema")
+            .setTitle(getString(R.string.theme_title))
             .setSingleChoiceItems(choices, selected) { dialog, which ->
                 val mode = when (which) {
                     1 -> "light"
@@ -272,9 +269,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun themeLabel(): String = when (prefs.getString("theme_mode", "system")) {
-        "light" -> "Terang"
-        "dark" -> "Gelap"
-        else -> "Sistem"
+        "light" -> getString(R.string.theme_light)
+        "dark" -> getString(R.string.theme_dark)
+        else -> getString(R.string.theme_system)
     }
 
     private fun applyThemeMode() {
@@ -285,23 +282,6 @@ class MainActivity : AppCompatActivity() {
                 else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             }
         )
-    }
-
-    private fun isServiceEnabled(): Boolean {
-        val manager = getSystemService(Context.ACCESSIBILITY_SERVICE)
-            as android.view.accessibility.AccessibilityManager
-        val expected = ComponentName(this, StatusBarAccessibilityService::class.java)
-        return manager.getEnabledAccessibilityServiceList(
-            AccessibilityServiceInfo.FEEDBACK_ALL_MASK
-        ).any { info ->
-            info.resolveInfo?.serviceInfo?.let {
-                ComponentName(it.packageName, it.name) == expected
-            } == true
-        }
-    }
-
-    private fun openAccessibilitySettings() {
-        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
     }
 
     private fun card(): MaterialCardView =
@@ -324,9 +304,9 @@ class MainActivity : AppCompatActivity() {
             if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
         }
 
-    private fun lp(top: Int = 0, extraTop: Int = 0): LinearLayout.LayoutParams =
+    private fun lp(top: Int = 0): LinearLayout.LayoutParams =
         LinearLayout.LayoutParams(-1, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-            topMargin = dp((top + extraTop).toFloat())
+            topMargin = dp(top.toFloat())
         }
 
     private fun dp(value: Float): Int =
