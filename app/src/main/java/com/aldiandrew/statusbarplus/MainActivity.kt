@@ -242,7 +242,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setEnabled(enabled: Boolean) {
-        if (enabled && !hasNotificationPermission()) {
+        if (enabled && !isTextModeEnabled() && !hasNotificationPermission()) {
             requestNotificationPermissionIfNeeded()
             window.decorView.postDelayed({ updateState() }, 700)
             return
@@ -258,6 +258,7 @@ class MainActivity : AppCompatActivity() {
         daySwitch.isChecked = enabled
         daySwitch.setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
         status.text = when {
+            enabled && isTextModeEnabled() -> getString(R.string.active_text_mode)
             !hasNotificationPermission() -> getString(R.string.permission_needed)
             enabled -> getString(R.string.active)
             else -> getString(R.string.inactive)
