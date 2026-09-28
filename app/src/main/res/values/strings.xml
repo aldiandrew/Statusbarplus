@@ -48,7 +48,6 @@
     <string name="font_custom">Font TTF/OTF saya…</string>
     
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
-</resources>
     <string name="layout_title">Posisi dan tata letak</string>
     <string name="layout_body">Atur perataan, offset, padding, dan jarak antarbaris. Pengaturan ini mengubah posisi teks di dalam ikon notifikasi; posisi slot notifikasi terhadap jam tetap dikendalikan Android System UI.</string>
     <string name="preset_title">Preset tampilan</string>
@@ -67,3 +66,4 @@
     <string name="offset_value">%1$d dp</string>
     <string name="padding_value">%1$d dp</string>
     <string name="spacing_value">%1$d dp</string>
+</resources>
