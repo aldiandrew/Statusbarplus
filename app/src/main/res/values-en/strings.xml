@@ -46,4 +46,5 @@
     <string name="offset_value">%1$d dp</string>
     <string name="padding_value">%1$d dp</string>
     <string name="spacing_value">%1$d dp</string>
+    <string name="reset_layout">Reset layout</string>
 </resources>
