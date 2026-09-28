@@ -70,14 +70,16 @@ class StatusBarTextAccessibilityService : AccessibilityService() {
             packageNames = arrayOf("com.android.systemui")
         }
 
-        registerReceiver(
-            refreshReceiver,
-            IntentFilter().apply {
-                addAction(ACTION_REFRESH)
-                addAction(ACTION_HIDE)
-            },
-            Context.RECEIVER_NOT_EXPORTED
-        )
+        val filter = IntentFilter().apply {
+            addAction(ACTION_REFRESH)
+            addAction(ACTION_HIDE)
+        }
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(refreshReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(refreshReceiver, filter)
+        }
         receiverRegistered = true
         scheduleRefresh()
     }
