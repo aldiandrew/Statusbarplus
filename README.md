@@ -13,7 +13,7 @@ Available display modes:
 - **Day + date + month** — two lines.
 - **Date + month** — two lines.
 
-The text follows the device's current locale and can use either a short or full weekday name.
+The weekday is always displayed in its short, locale-aware form. There is no long weekday-name setting.
 
 Additional features:
 
@@ -25,6 +25,8 @@ Additional features:
 - Material 3-based application interface.
 - Dynamic Material colors on supported Android versions.
 - Automatic refresh when the calendar date changes.
+- Persistent ongoing notification behavior so the status-bar item is not normally dismissible with a swipe.
+- Tapping the status-bar notification opens an Android calendar chooser when one or more calendar apps are installed.
 - Background/battery-optimization guidance for devices that aggressively stop background work.
 - Full calendar information remains available in the notification shade.
 - Notification permission is requested using Android's official permission mechanism.
@@ -37,11 +39,11 @@ Additional features:
 3. Turn on **Show day**.
 4. Allow notification permission when Android asks for it.
 5. Select the information to display under **Status bar content**.
-6. Enable **Short day** if you want an abbreviated weekday name. Turn it off for the full weekday name.
-7. Adjust **Status bar text size**.
-8. Select **System font** or import your own **TTF/OTF** font.
-9. If your device frequently stops background apps, use the battery-optimization option provided by the app.
-10. Once enabled, the information appears as a text-based notification icon in the status bar and refreshes when the date changes.
+6. Adjust **Status bar text size**.
+7. Select **System font** or import your own **TTF/OTF** font.
+8. If your device frequently stops background apps, use the battery-optimization option provided by the app.
+9. Once enabled, the information appears as a persistent text-based notification icon in the status bar and refreshes when the date changes.
+10. Tap the notification to open the installed calendar app chooser.
 
 ## After restarting the device
 
@@ -51,15 +53,15 @@ Statusbarplus can receive the Android boot event and restore its scheduled date 
 
 Statusbarplus uses an Android **notification small icon**. The day/date text is rendered into a bitmap and supplied as the notification icon. This allows the app to work without drawing directly over System UI.
 
-Android System UI still controls the final notification-icon slot, position, tinting, and scaling. Therefore, the exact physical size and position can vary between Android versions and device manufacturers. Long text is horizontally condensed before the app reduces its font size so that localized weekday names remain as readable as possible.
+Android System UI still controls the final notification-icon slot, position, tinting, and scaling. An ongoing notification is used so users normally cannot dismiss the status-bar item with a swipe; Android System UI can still remove notifications in exceptional system conditions. Therefore, the exact physical size and position can vary between Android versions and device manufacturers. Long text is horizontally condensed before the app reduces its font size so that localized weekday names remain as readable as possible.
 
 ## Material 3 interface
 
-The application interface follows Material 3 theming principles, including:
+The application interface follows Material 3 theming principles and uses the device's Android Dynamic Color (Monet) palette on Android 12 and newer, including:
 
 - Light and dark color schemes.
 - System theme following.
-- Dynamic colors on supported Android versions.
+- Dynamic colors from the device wallpaper/system palette (Monet) on supported Android versions.
 - Theme-aware system-bar icon contrast.
 - Edge-to-edge layout with system-bar insets handled by the application.
 
