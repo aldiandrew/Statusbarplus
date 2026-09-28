@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var preview: TextView
     private lateinit var sizeLabel: TextView
+    private lateinit var displayModeButton: MaterialButton
     private lateinit var backgroundButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,6 +143,11 @@ class MainActivity : AppCompatActivity() {
                         },
                         lp(4)
                     )
+                    displayModeButton = MaterialButton(this@MainActivity).apply {
+                        text = displayModeLabel()
+                        setOnClickListener { showDisplayModeChooser() }
+                    }
+                    addView(displayModeButton, lp(4))
                     sizeLabel = text("", 14f, true)
                     addView(sizeLabel, lp(8))
                     addView(
@@ -226,9 +232,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePreview() {
         if (!::preview.isInitialized) return
+        val locale = Locale.getDefault()
         val pattern = if (prefs.getBoolean("short_day", true)) "EEE" else "EEEE"
-        val day = SimpleDateFormat(pattern, Locale.getDefault()).format(Date())
-        preview.text = "12:34   $day"
+        val day = SimpleDateFormat(pattern, locale).format(Date())
+        val date = SimpleDateFormat("d", locale).format(Date())
+        val month = SimpleDateFormat("MMM", locale).format(Date())
+        preview.text = when (prefs.getString("display_mode", "day")) {
+            "day_date" -> "12:34   $day\n             $date"
+            "day_date_month" -> "12:34   $day\n             $date $month"
+            "date_month" -> "12:34   $date\n             $month"
+            else -> "12:34   $day"
+        }
         preview.typeface = android.graphics.Typeface.create(
             android.graphics.Typeface.DEFAULT,
             android.graphics.Typeface.NORMAL
@@ -307,6 +321,45 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 applyThemeMode()
                 recreate()
+            }
+            .show()
+    }
+
+
+    private fun displayModeLabel(): String = when (prefs.getString("display_mode", "day")) {
+        "day_date" -> getString(R.string.mode_day_date)
+        "day_date_month" -> getString(R.string.mode_day_date_month)
+        "date_month" -> getString(R.string.mode_date_month)
+        else -> getString(R.string.mode_day)
+    }
+
+    private fun showDisplayModeChooser() {
+        val choices = arrayOf(
+            getString(R.string.mode_day),
+            getString(R.string.mode_day_date),
+            getString(R.string.mode_day_date_month),
+            getString(R.string.mode_date_month)
+        )
+        val selected = when (prefs.getString("display_mode", "day")) {
+            "day_date" -> 1
+            "day_date_month" -> 2
+            "date_month" -> 3
+            else -> 0
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.display_mode_title))
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                val mode = when (which) {
+                    1 -> "day_date"
+                    2 -> "day_date_month"
+                    3 -> "date_month"
+                    else -> "day"
+                }
+                prefs.edit().putString("display_mode", mode).apply()
+                displayModeButton.text = displayModeLabel()
+                DayNotificationManager.show(this)
+                updatePreview()
+                dialog.dismiss()
             }
             .show()
     }
