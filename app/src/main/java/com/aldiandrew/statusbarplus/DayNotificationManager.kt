@@ -106,9 +106,8 @@ object DayNotificationManager {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
 
-        // Android/SystemUI places a notification small icon in a fixed status-bar slot.
-        // Render at 2x resolution, then let SystemUI scale it into its native slot.
-        // This removes the large transparent margins that previously made the text look tiny.
+        // Keep every display mode on a single line. SystemUI gives notification
+        // icons a fixed slot, so the complete text is fitted as one unit.
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
 
         val statusBarId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -118,78 +117,39 @@ object DayNotificationManager {
             24f * density
         }
 
+        // Base the requested size on the device's own status-bar clock area.
         val systemClockSp = ((statusBarHeight / scaledDensity) * 0.68f).coerceIn(16f, 24f)
         val requested = sizeSp.coerceIn(12f, 22f)
-        val lines = when (mode) {
-            "day_date" -> listOf(day, date)
-            "day_date_month" -> listOf(day, "$date $month")
-            "date_month" -> listOf(date, month)
-            else -> listOf(day)
-        }
-        val multiLine = lines.size > 1
-
-        // The slider is relative to the device's status-bar clock size.
-        // Multiline modes use the maximum size that can physically fit without clipping.
         val requestedPx = (systemClockSp * (requested / 22f)) * scaledDensity
-        val maxLineHeightPx = if (multiLine) {
-            canvasSize * 0.31f
-        } else {
-            canvasSize * 0.70f
+
+        val text = when (mode) {
+            "day_date" -> "$day $date"
+            "day_date_month" -> "$day $date $month"
+            "date_month" -> "$date $month"
+            else -> day
         }
-        var textSize = min(requestedPx, maxLineHeightPx).coerceAtLeast(1f)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             color = android.graphics.Color.WHITE
             typeface = FontManager.getTypeface(context)
             textAlign = Paint.Align.CENTER
-            this.textSize = textSize
+            textSize = requestedPx.coerceAtLeast(1f)
         }
 
-        fun fitWidth(text: String, maxWidth: Float) {
-            val measured = paint.measureText(text)
-            if (measured > maxWidth && measured > 0f) {
-                paint.textSize *= maxWidth / measured
-            }
+        // Fit the complete line once instead of shrinking individual parts.
+        // This prevents one part from being unnecessarily reduced because a
+        // previous line was long.
+        val maxWidth = canvasSize * 0.96f
+        val measured = paint.measureText(text)
+        if (measured > maxWidth && measured > 0f) {
+            paint.textSize *= maxWidth / measured
         }
 
-        if (!multiLine) {
-            fitWidth(day, canvasSize * 0.96f)
-        } else {
-            // Fit both lines independently, so a long localized weekday/month never clips.
-            val maxWidth = canvasSize * 0.94f
-            lines.forEach { fitWidth(it, maxWidth) }
-        }
-
-        // For two-line modes, also fit the complete stack vertically.
-        if (multiLine) {
-            var metrics = paint.fontMetrics
-            var lineHeight = metrics.descent - metrics.ascent
-            val gap = density * 0.8f
-            val totalHeight = lineHeight * lines.size + gap * (lines.size - 1)
-            if (totalHeight > canvasSize * 0.88f) {
-                paint.textSize *= (canvasSize * 0.88f) / totalHeight
-                metrics = paint.fontMetrics
-                lineHeight = metrics.descent - metrics.ascent
-            }
-        }
-
+        val metrics = paint.fontMetrics
         val bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val metrics = paint.fontMetrics
-
-        if (!multiLine) {
-            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
-            canvas.drawText(day, canvasSize / 2f, baseline, paint)
-        } else {
-            val gap = density * 0.8f
-            val lineHeight = metrics.descent - metrics.ascent
-            val totalHeight = lineHeight * lines.size + gap * (lines.size - 1)
-            var baseline = (canvasSize - totalHeight) / 2f - metrics.ascent
-            lines.forEach { line ->
-                canvas.drawText(line, canvasSize / 2f, baseline, paint)
-                baseline += lineHeight + gap
-            }
-        }
+        val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
+        canvas.drawText(text, canvasSize / 2f, baseline, paint)
         return bitmap
     }
 
