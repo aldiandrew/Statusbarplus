@@ -11,7 +11,6 @@
     <string name="background_allow">Izinkan penggunaan latar belakang</string>
     <string name="background_allowed">Penggunaan latar belakang diizinkan.</string>
     <string name="display_title">Tampilan hari</string>
-    <string name="short_day">Hari singkat</string>
     <string name="text_size">Ukuran teks status bar: %1$d sp</string>
     <string name="display_mode_title">Isi status bar</string>
     <string name="mode_day">Hari saja</string>
@@ -27,6 +26,7 @@
     <string name="active">Aktif • menggunakan notifikasi status bar Android.</string>
     <string name="inactive">Tidak aktif.</string>
     <string name="notification_description">Hari saat ini</string>
+    <string name="choose_calendar">Pilih aplikasi kalender</string>
     <string name="note">Ukuran teks menyesuaikan ukuran area status bar perangkat agar tetap jelas dan tidak terpotong. Mode ini menggunakan notifikasi Android biasa.</string>
     <string name="guide_title">Cara menggunakan Statusbarplus</string>
     <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Pilih isi status bar: hari, hari + tanggal, hari + tanggal + bulan, atau tanggal + bulan.\n\n3. Atur ukuran teks. Ukuran akan menyesuaikan ruang status bar perangkat agar tetap terbaca dan tidak terpotong.\n\n4. Pilih font sistem atau impor font TTF/OTF sendiri.\n\n5. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
