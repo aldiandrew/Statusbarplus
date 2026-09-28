@@ -138,8 +138,7 @@ object DayNotificationManager {
         }
 
         val lineHeight = (textSize * 1.05f).coerceAtLeast(1f)
-        val maxLineHeight = (maxPaint.textSize * 1.05f).coerceAtLeast(1f)
-        val lineGap = if (lines.size > 1) 1.5f * density else 0f
+                val lineGap = if (lines.size > 1) 1.5f * density else 0f
         val horizontalPadding = 2f * density
         val width = (lines.maxOf { maxPaint.measureText(it) } + horizontalPadding * 2)
             .coerceAtLeast(20f * density).toInt()
@@ -148,7 +147,7 @@ object DayNotificationManager {
         val canvas = Canvas(bitmap)
 
         val totalTextHeight = lineHeight * lines.size + lineGap
-        var baseline = (height - totalTextHeight) / 2f - paint.ascent
+        var baseline = (height - totalTextHeight) / 2f - paint.ascent()
         for (line in lines) {
             canvas.drawText(line, width / 2f, baseline, paint)
             baseline += lineHeight + lineGap
