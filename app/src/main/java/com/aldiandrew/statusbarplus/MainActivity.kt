@@ -150,18 +150,6 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.display_title), 17f, true), lp())
-                    addView(
-                        MaterialSwitch(this@MainActivity).apply {
-                            text = getString(R.string.short_day)
-                            isChecked = prefs.getBoolean("short_day", true)
-                            setOnCheckedChangeListener { _, checked ->
-                                prefs.edit().putBoolean("short_day", checked).apply()
-                                DayNotificationManager.show(this@MainActivity)
-                                updatePreview()
-                            }
-                        },
-                        lp(4)
-                    )
                     displayModeButton = MaterialButton(this@MainActivity).apply {
                         text = displayModeLabel()
                         setOnClickListener { showDisplayModeChooser() }
@@ -267,8 +255,7 @@ class MainActivity : AppCompatActivity() {
     private fun updatePreview() {
         if (!::preview.isInitialized) return
         val locale = Locale.getDefault()
-        val pattern = if (prefs.getBoolean("short_day", true)) "EEE" else "EEEE"
-        val day = SimpleDateFormat(pattern, locale).format(Date())
+        val day = SimpleDateFormat("EEE", locale).format(Date())
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         preview.text = when (prefs.getString("display_mode", "day")) {
