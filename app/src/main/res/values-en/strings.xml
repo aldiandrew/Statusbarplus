@@ -31,4 +31,10 @@
     <string name="guide_body">1. Turn on “Show day”.\n\n2. Allow notifications when Android asks. This permission is required because the day/date is displayed as a notification icon in the status bar.\n\n3. Choose the status-bar content and text size. The size is automatically fitted to avoid clipping.\n\n4. If your device often stops background apps, open “Allow background operation” and grant the battery-optimization exemption. This is optional.\n\nThe app does not use Accessibility Service, overlays, root, or a continuously running service. It updates when settings change and around the start of a new day.</string>
     <string name="guide_continue">Continue</string>
     <string name="guide_later">Later</string>
+    <string name="font_title">Status bar font</string>
+    <string name="font_body">Choose a Google Font or import your own TTF/OTF. The selected font is used for the status-bar text and preview.</string>
+    <string name="font_system">System font</string>
+    <string name="font_custom">My TTF/OTF font…</string>
+    <string name="font_download_failed">Could not download the font. Check your internet connection and try again.</string>
+    <string name="font_invalid">The selected file is not a valid TTF/OTF font.</string>
 </resources>
