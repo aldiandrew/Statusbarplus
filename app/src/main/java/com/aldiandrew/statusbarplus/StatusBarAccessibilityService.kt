@@ -1,10 +1,16 @@
 package com.aldiandrew.statusbarplus
 
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
+import android.text.format.DateFormat
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -17,11 +23,19 @@ class StatusBarAccessibilityService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
     private var textView: TextView? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var screenOn = true
 
     private val tick = object : Runnable {
         override fun run() {
             updateOverlay()
-            handler.postDelayed(this, 30_000L)
+            handler.postDelayed(this, 1000L)
+        }
+    }
+
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            screenOn = intent?.action != Intent.ACTION_SCREEN_OFF
+            updateOverlay()
         }
     }
 
@@ -29,6 +43,17 @@ class StatusBarAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         synchronized(lock) { instance = this }
+
+        screenOn = true
+        registerReceiver(
+            screenReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            },
+            RECEIVER_NOT_EXPORTED
+        )
+
         createOverlay()
         handler.post(tick)
     }
@@ -41,6 +66,7 @@ class StatusBarAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        try { unregisterReceiver(screenReceiver) } catch (_: Exception) {}
         removeOverlay()
         synchronized(lock) { instance = null }
         super.onDestroy()
@@ -59,7 +85,7 @@ class StatusBarAccessibilityService : AccessibilityService() {
         textView = tv
 
         val params = WindowManager.LayoutParams(
-            dp(180f),
+            dp(240f),
             statusBarHeight(),
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -83,14 +109,21 @@ class StatusBarAccessibilityService : AccessibilityService() {
 
     private fun updateOverlay() {
         val tv = textView ?: return
+        if (!screenOn || !isStatusBarLikelyVisible()) {
+            tv.visibility = View.GONE
+            return
+        }
+
+        tv.visibility = View.VISIBLE
+
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val short = prefs.getBoolean("short_day", false)
-        val offset = prefs.getFloat("offset_dp", 58f)
         val size = prefs.getFloat("text_size", 13f)
         val dark = prefs.getBoolean("dark_text", false)
 
+        val locale = Locale.getDefault()
         val pattern = if (short) "EEE" else "EEEE"
-        val day = SimpleDateFormat(pattern, Locale("id", "ID")).format(Date())
+        val day = SimpleDateFormat(pattern, locale).format(Date())
 
         tv.text = day
         tv.textSize = size
@@ -103,12 +136,57 @@ class StatusBarAccessibilityService : AccessibilityService() {
         )
 
         val params = tv.layoutParams as? WindowManager.LayoutParams ?: return
-        params.x = dp(offset)
+        params.x = calculateClockEndOffset(locale)
         params.height = statusBarHeight()
         try {
             windowManager.updateViewLayout(tv, params)
         } catch (_: Exception) {
         }
+    }
+
+    private fun calculateClockEndOffset(locale: Locale): Int {
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val manual = prefs.getBoolean("manual_position", false)
+        if (manual) return dp(prefs.getFloat("offset_dp", 58f))
+
+        val is24 = DateFormat.is24HourFormat(this)
+        val pattern = if (is24) "HH:mm" else "h:mm a"
+        val clock = SimpleDateFormat(pattern, locale).format(Date())
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            textSize = dp(14f).toFloat()
+        }
+        val measuredClockWidth = paint.measureText(clock)
+        val leftInset = getStatusBarLeftInset()
+        val gap = dp(7f)
+
+        // Motorola's stock clock is placed at the start of the status bar.
+        // Anchor the day after the measured clock width instead of using a
+        // fixed x-position, so the first activation does not overlap the clock.
+        return (leftInset + measuredClockWidth + gap).toInt()
+    }
+
+    private fun getStatusBarLeftInset(): Int {
+        return try {
+            windowManager.currentWindowMetrics.windowInsets
+                .getInsetsIgnoringVisibility(android.view.WindowInsets.Type.systemBars())
+                .left
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    private fun isStatusBarLikelyVisible(): Boolean {
+        val root = rootInActiveWindow ?: return true
+        val bounds = android.graphics.Rect()
+        root.getBoundsInScreen(bounds)
+        val screenHeight = resources.displayMetrics.heightPixels
+        val bar = statusBarHeight()
+
+        // Full-screen/immersive windows normally occupy the whole display.
+        // In that state the stock clock is not visible, so hide our overlay too.
+        return bounds.top > 0 || bounds.bottom < screenHeight - (bar / 2)
     }
 
     private fun removeOverlay() {
