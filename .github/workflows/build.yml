@@ -30,20 +30,30 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Build optimized installable APK
-        run: gradle :app:assembleOptimizedDebug --stacktrace
+      - name: Build optimized free APK
+        run: gradle :app:assembleFreeOptimizedDebug --stacktrace
+
+      - name: Build optimized Pro APK
+        run: gradle :app:assembleProOptimizedDebug --stacktrace
 
       - name: Verify APK
         run: |
-          test -s app/build/outputs/apk/optimizedDebug/app-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 app/build/outputs/apk/optimizedDebug/app-optimizedDebug.apk
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/optimizedDebug/app-optimizedDebug.apk
+          test -s app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
+          test -s app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
+          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
+          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
 
       - name: Report APK size
-        run: du -h app/build/outputs/apk/optimizedDebug/app-optimizedDebug.apk
+        run: |
+          du -h app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
+          du -h app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Statusbarplus-optimized-debug
-          path: app/build/outputs/apk/optimizedDebug/app-optimizedDebug.apk
+          name: Statusbarplus-free-and-pro
+          path: |
+            app/build/outputs/apk/optimizedDebug/free/app-free-optimizedDebug.apk
+            app/build/outputs/apk/optimizedDebug/pro/app-pro-optimizedDebug.apk
           retention-days: 7
