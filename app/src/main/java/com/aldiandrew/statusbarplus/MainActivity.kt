@@ -505,26 +505,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun dateFormatLabel(): String = when (prefs.getString("date_format", "d")) {
         "dd" -> getString(R.string.format_dd)
-        "d MMM" -> getString(R.string.pro_format_d_mmm)
-        "dd MMM" -> getString(R.string.pro_format_dd_mmm)
-        else -> getString(R.string.pro_format_d)
+        "d MMM" -> getString(R.string.format_d_mmm)
+        "dd MMM" -> getString(R.string.format_dd_mmm)
+        else -> getString(R.string.format_d)
     }
 
     private fun showDateFormatChooser() {
         val choices = arrayOf(
             getString(R.string.pro_format_d),
-            getString(R.string.pro_format_dd),
+            getString(R.string.format_dd),
             getString(R.string.pro_format_d_mmm),
             getString(R.string.pro_format_dd_mmm)
         )
-        val selected = when (prefs.getString("pro_date_format", "d")) {
+        val selected = when (prefs.getString("date_format", "d")) {
             "dd" -> 1
             "d MMM" -> 2
             "dd MMM" -> 3
             else -> 0
         }
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.pro_format_title))
+            .setTitle(getString(R.string.format_title))
             .setSingleChoiceItems(choices, selected) { dialog, which ->
                 val format = when (which) {
                     1 -> "dd"
