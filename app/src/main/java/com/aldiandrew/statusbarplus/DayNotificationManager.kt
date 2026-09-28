@@ -97,7 +97,7 @@ object DayNotificationManager {
         // SystemUI renders notification small icons in a fixed status-bar slot.
         // A square 24dp bitmap prevents the single-line glyph from being shifted
         // upward by a tall/non-square drawable.
-        val iconSize = (24f * density).toInt().coerceAtLeast(24)
+        val iconSize = (32f * density).toInt().coerceAtLeast(96)
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
             "day_date_month" -> listOf(day, "$date $month")
@@ -107,9 +107,9 @@ object DayNotificationManager {
 
         val desiredTextSize = requestedSp * scaledDensity
         val maxTextSize = if (multiLine) {
-            (iconSize * 0.46f).coerceAtMost(14f * scaledDensity)
+            (iconSize * 0.30f).coerceAtMost(10f * scaledDensity)
         } else {
-            (iconSize * 0.70f).coerceAtMost(16f * scaledDensity)
+            (iconSize * 0.56f).coerceAtMost(20f * scaledDensity)
         }
         var textSize = desiredTextSize.coerceAtMost(maxTextSize).coerceAtLeast(1f)
 
