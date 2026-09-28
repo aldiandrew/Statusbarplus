@@ -47,4 +47,15 @@
     <string name="padding_value">%1$d dp</string>
     <string name="spacing_value">%1$d dp</string>
     <string name="reset_layout">Reset layout</string>
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_body">Save Statusbarplus settings, including a custom TTF/OTF font, to one backup file. File access is granted only after you choose a location or file through the system picker.</string>
+    <string name="backup_create">Create backup</string>
+    <string name="backup_restore">Restore backup</string>
+    <string name="backup_restore_confirm_title">Restore settings?</string>
+    <string name="backup_restore_confirm_body">Your current Statusbarplus settings will be replaced by the selected backup. If the backup contains a custom font, it will also be restored.</string>
+    <string name="backup_restore_confirm">Restore</string>
+    <string name="backup_create_success">Backup saved successfully.</string>
+    <string name="backup_create_failed">Backup could not be saved.</string>
+    <string name="backup_restore_success">Backup restored successfully.</string>
+    <string name="backup_restore_failed">The backup file is invalid or could not be read.</string>
 </resources>
