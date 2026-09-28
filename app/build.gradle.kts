@@ -7,17 +7,37 @@ android {
     namespace = "com.aldiandrew.statusbarplus"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.aldiandrew.statusbarplus"
         minSdk = 30
         targetSdk = 36
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 4
-        versionName = "2.1"
+        versionName = "3.0"
+
+        buildConfigField("boolean", "IS_PRO", "false")
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    flavorDimensions += "edition"
+
+    productFlavors {
+        create("free") {
+            dimension = "edition"
+        }
+        create("pro") {
+            dimension = "edition"
+            applicationIdSuffix = ".pro"
+            versionNameSuffix = "-pro"
+            buildConfigField("boolean", "IS_PRO", "true")
+        }
     }
 
     buildTypes {
