@@ -30,7 +30,7 @@ object DayNotificationManager {
 
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
-                val mode = prefs.getString("display_mode", "day") ?: "day"
+        val mode = prefs.getString("display_mode", "day") ?: "day"
         val day = SimpleDateFormat("EEE", locale).format(Date())
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
@@ -40,7 +40,8 @@ object DayNotificationManager {
             createTextIcon(context, day, date, month, mode, sizeSp)
         )
 
-        val calendarIntent = Intent(Intent.ACTION_CALENDAR).apply {
+        val calendarIntent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_APP_CALENDAR)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         val launchIntent = if (context.packageManager.queryIntentActivities(calendarIntent, 0).isNotEmpty()) {
@@ -114,9 +115,6 @@ object DayNotificationManager {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
 
-        // Android controls the final small-icon slot. Keep the requested
-        // vertical text size as large as possible and compress horizontally
-        // before shrinking the font, so long localized names remain legible.
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
         val requestedSp = sizeSp.coerceIn(12f, 22f)
 
@@ -138,14 +136,10 @@ object DayNotificationManager {
         val maxWidth = canvasSize - horizontalPadding * 2f
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
 
-        // Preserve vertical size first. A horizontal scale is much less
-        // destructive to readability than reducing the whole glyph size.
         if (widestLine > maxWidth && widestLine > 0f) {
             paint.textScaleX = (maxWidth / widestLine).coerceAtLeast(0.55f)
         }
 
-        // If even a condensed line cannot fit, reduce the text size only as
-        // the final fallback. This prevents long weekday names disappearing.
         val fittedWidth = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
         if (fittedWidth > maxWidth && fittedWidth > 0f) {
             paint.textSize *= maxWidth / fittedWidth
