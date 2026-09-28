@@ -16,6 +16,7 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.accessibility.AccessibilityEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
