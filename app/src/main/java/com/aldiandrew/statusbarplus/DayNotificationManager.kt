@@ -32,17 +32,13 @@ object DayNotificationManager {
         val locale = Locale.getDefault()
         val mode = prefs.getString("display_mode", "day") ?: "day"
         val day = SimpleDateFormat("EEE", locale).format(Date())
-        val datePattern = if (BuildConfig.IS_PRO) {
-            prefs.getString("pro_date_format", "d") ?: "d"
-        } else {
-            "d"
-        }
+        val datePattern = prefs.getString("date_format", "d") ?: "d"
         val date = SimpleDateFormat(datePattern, locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
 
         val icon = Icon.createWithBitmap(
-            createTextIcon(context, day, date, month, mode, sizeSp)
+            createTextIcon(context, day, date, month, mode, sizeSp, prefs)
         )
 
         val title = when (mode) {
@@ -100,12 +96,18 @@ object DayNotificationManager {
         date: String,
         month: String,
         mode: String,
-        sizeSp: Float
+        sizeSp: Float,
+        prefs: android.content.SharedPreferences
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
         val requestedSp = sizeSp.coerceIn(12f, 22f)
+        val padding = prefs.getFloat("layout_padding", 4f).coerceIn(0f, 18f)
+        val horizontalOffset = prefs.getFloat("horizontal_offset", 0f).coerceIn(-12f, 12f) * density
+        val verticalOffset = prefs.getFloat("vertical_offset", 0f).coerceIn(-12f, 12f) * density
+        val lineSpacing = prefs.getFloat("line_spacing", 0f).coerceIn(-6f, 12f) * scaledDensity
+        val alignment = prefs.getString("text_alignment", "center") ?: "center"
 
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
@@ -121,7 +123,7 @@ object DayNotificationManager {
             textSize = requestedSp * scaledDensity
         }
 
-        val maxWidth = canvasSize * 0.94f
+        val maxWidth = canvasSize * (1f - (padding / 48f)).coerceIn(0.55f, 0.96f)
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
 
         if (widestLine > maxWidth && widestLine > 0f) {
@@ -142,15 +144,21 @@ object DayNotificationManager {
         val canvas = Canvas(bitmap)
         val metrics = paint.fontMetrics
 
+        val x = when (alignment) {
+            "left" -> padding * density + horizontalOffset
+            "right" -> canvasSize - padding * density + horizontalOffset
+            else -> canvasSize / 2f + horizontalOffset
+        }
+
         if (lines.size == 1) {
-            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
-            canvas.drawText(lines[0], canvasSize / 2f, baseline, paint)
+            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f + verticalOffset
+            canvas.drawText(lines[0], x, baseline, paint)
         } else {
-            val lineHeight = metrics.descent - metrics.ascent
+            val lineHeight = (metrics.descent - metrics.ascent) + lineSpacing
             val totalHeight = lineHeight * 2f
-            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
-            canvas.drawText(lines[0], canvasSize / 2f, firstBaseline, paint)
-            canvas.drawText(lines[1], canvasSize / 2f, firstBaseline + lineHeight, paint)
+            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent + verticalOffset
+            canvas.drawText(lines[0], x, firstBaseline, paint)
+            canvas.drawText(lines[1], x, firstBaseline + lineHeight, paint)
         }
 
         return bitmap
