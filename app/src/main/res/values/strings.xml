@@ -4,8 +4,6 @@
     <string name="subtitle">Hari di status bar</string>
     <string name="hero_title">Hari, seperti notifikasi sistem</string>
     <string name="hero_body">Menampilkan hari sebagai notifikasi status bar, mengikuti font sistem perangkat dan tanpa Accessibility Service, overlay, root, atau Xposed.</string>
-    <string name="preview_title">Pratinjau</string>
-    <string name="preview_body">Font mengikuti font default perangkat. Ukuran dibuat lebih besar agar lebih mudah dibaca di slot status bar.</string>
     <string name="show_day">Tampilkan hari</string>
     <string name="notification_settings">Pengaturan notifikasi</string>
     <string name="background_title">Berjalan di latar belakang</string>
@@ -28,5 +26,9 @@
     <string name="active">Aktif • menggunakan notifikasi status bar Android.</string>
     <string name="inactive">Tidak aktif.</string>
     <string name="notification_description">Hari saat ini</string>
-    <string name="note">Catatan: SystemUI tetap menentukan posisi ikon notifikasi. Aplikasi tidak menggunakan Accessibility Service atau overlay.</string>
+    <string name="note">Catatan: SystemUI tetap menentukan posisi ikon notifikasi. Ukuran otomatis disesuaikan dengan skala status bar perangkat.</string>
+    <string name="guide_title">Cara menggunakan Statusbarplus</string>
+    <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Izinkan notifikasi saat Android memintanya. Izin ini diperlukan karena tanggal/hari ditampilkan sebagai ikon notifikasi di status bar.\n\n3. Pilih isi status bar dan ukuran teks. Ukuran akan disesuaikan otomatis agar tidak terpotong.\n\n4. Jika perangkat sering menghentikan aplikasi di latar belakang, buka “Izinkan penggunaan latar belakang” dan berikan pengecualian optimasi baterai. Ini opsional.\n\nAplikasi tidak memakai Accessibility Service, overlay, root, atau layanan yang terus berjalan. Pembaruan dilakukan saat pengaturan berubah dan sekitar pergantian hari.</string>
+    <string name="guide_continue">Lanjutkan</string>
+    <string name="guide_later">Nanti</string>
 </resources>
