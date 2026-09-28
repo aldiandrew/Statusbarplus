@@ -152,9 +152,9 @@ class MainActivity : AppCompatActivity() {
                     addView(sizeLabel, lp(8))
                     addView(
                         Slider(this@MainActivity).apply {
-                            valueFrom = 14f
-                            valueTo = 28f
-                            value = prefs.getFloat("text_size", 18f).coerceIn(14f, 28f)
+                            valueFrom = 12f
+                            valueTo = 22f
+                            value = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
                             stepSize = 1f
                             addOnChangeListener { _, value, _ ->
                                 prefs.edit().putFloat("text_size", value).apply()
@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                     )
                     sizeLabel.text = getString(
                         R.string.text_size,
-                        prefs.getFloat("text_size", 18f).coerceIn(14f, 28f).toInt()
+                        prefs.getFloat("text_size", 20f).coerceIn(12f, 22f).toInt()
                     )
                 })
             },
@@ -247,7 +247,7 @@ class MainActivity : AppCompatActivity() {
             android.graphics.Typeface.DEFAULT,
             android.graphics.Typeface.NORMAL
         )
-        preview.textSize = prefs.getFloat("text_size", 18f).coerceIn(14f, 28f)
+        preview.textSize = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
     }
 
     private fun requestNotificationPermissionIfNeeded() {
