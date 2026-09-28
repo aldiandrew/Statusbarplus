@@ -30,9 +30,8 @@ object DayNotificationManager {
 
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
-        val shortDay = prefs.getBoolean("short_day", true)
-        val mode = prefs.getString("display_mode", "day") ?: "day"
-        val day = SimpleDateFormat(if (shortDay) "EEE" else "EEEE", locale).format(Date())
+                val mode = prefs.getString("display_mode", "day") ?: "day"
+        val day = SimpleDateFormat("EEE", locale).format(Date())
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
@@ -41,8 +40,16 @@ object DayNotificationManager {
             createTextIcon(context, day, date, month, mode, sizeSp)
         )
 
+        val calendarIntent = Intent(Intent.ACTION_CALENDAR).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val launchIntent = if (context.packageManager.queryIntentActivities(calendarIntent, 0).isNotEmpty()) {
+            Intent.createChooser(calendarIntent, context.getString(R.string.choose_calendar))
+        } else {
+            Intent(context, MainActivity::class.java)
+        }
         val intent = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java),
+            context, 0, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -60,6 +67,7 @@ object DayNotificationManager {
             .setContentIntent(intent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setAutoCancel(false)
             .setShowWhen(false)
             .setCategory(Notification.CATEGORY_STATUS)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
