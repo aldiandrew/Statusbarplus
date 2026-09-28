@@ -150,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                         subtitle = getString(R.string.show_day_body)
                     ).apply {
                         daySwitch = MaterialSwitch(this@MainActivity).apply {
+                            showText = false
                             isChecked = prefs.getBoolean("enabled", false)
                             setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
                         }
@@ -237,6 +238,13 @@ class MainActivity : AppCompatActivity() {
                     addLayoutSlider(this, R.string.vertical_offset, "vertical_offset", -12f, 12f, 0f)
                     addLayoutSlider(this, R.string.layout_padding, "layout_padding", 0f, 18f, 4f)
                     addLayoutSlider(this, R.string.line_spacing, "line_spacing", -6f, 12f, 0f)
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.reset_layout)
+                            setOnClickListener { resetTextLayout() }
+                        },
+                        lp(12)
+                    )
                 })
             },
             lp(12)
@@ -303,6 +311,17 @@ class MainActivity : AppCompatActivity() {
             },
             lp()
         )
+    }
+
+    private fun resetTextLayout() {
+        prefs.edit()
+            .putFloat("horizontal_offset", 0f)
+            .putFloat("vertical_offset", 0f)
+            .putFloat("layout_padding", 4f)
+            .putFloat("line_spacing", 0f)
+            .apply()
+        DayNotificationManager.show(this)
+        recreate()
     }
 
     private fun layoutValue(key: String, value: Float): String = when (key) {
