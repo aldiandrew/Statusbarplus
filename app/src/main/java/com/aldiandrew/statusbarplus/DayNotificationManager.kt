@@ -4,9 +4,7 @@ import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -32,37 +30,17 @@ object DayNotificationManager {
         val locale = Locale.getDefault()
         val mode = prefs.getString("display_mode", "day") ?: "day"
         val day = SimpleDateFormat("EEE", locale).format(Date())
-        val date = SimpleDateFormat("d", locale).format(Date())
+        val datePattern = if (BuildConfig.IS_PRO) {
+            prefs.getString("pro_date_format", "d") ?: "d"
+        } else {
+            "d"
+        }
+        val date = SimpleDateFormat(datePattern, locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
 
         val icon = Icon.createWithBitmap(
             createTextIcon(context, day, date, month, mode, sizeSp)
-        )
-
-        val calendarIntent = Intent.makeMainSelectorActivity(
-            Intent.ACTION_MAIN,
-            Intent.CATEGORY_APP_CALENDAR
-        ).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-
-        val launchIntent = if (
-            context.packageManager.queryIntentActivities(calendarIntent, 0).isNotEmpty()
-        ) {
-            Intent.createChooser(
-                calendarIntent,
-                context.getString(R.string.choose_calendar)
-            )
-        } else {
-            Intent(context, MainActivity::class.java)
-        }
-
-        val contentIntent = PendingIntent.getActivity(
-            context,
-            0,
-            launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val title = when (mode) {
@@ -76,7 +54,6 @@ object DayNotificationManager {
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(context.getString(R.string.notification_description))
-            .setContentIntent(contentIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
