@@ -14,7 +14,12 @@
     <string name="background_allowed">Penggunaan latar belakang diizinkan.</string>
     <string name="display_title">Tampilan hari</string>
     <string name="short_day">Hari singkat</string>
-    <string name="text_size">Ukuran teks: %1$d sp</string>
+    <string name="text_size">Ukuran teks status bar: %1$d sp</string>
+    <string name="display_mode_title">Isi status bar</string>
+    <string name="mode_day">Hari saja</string>
+    <string name="mode_day_date">Hari + tanggal</string>
+    <string name="mode_day_date_month">Hari + tanggal + bulan</string>
+    <string name="mode_date_month">Tanggal + bulan</string>
     <string name="theme_title">Tema aplikasi</string>
     <string name="theme_system">Sistem</string>
     <string name="theme_light">Terang</string>
