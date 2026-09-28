@@ -2,8 +2,7 @@
 
 Statusbarplus is a lightweight Android app that shows calendar information in the status bar through a normal Android notification icon.
 
-The app is designed around a clean, expressive Material 3 interface inspired by the component and list patterns in Material_3_Expressive_List:
-https://github.com/NicosNicolaou16/Material_3_Expressive_List
+The app uses a clean Material 3 interface with expressive typography, rounded surfaces, clear hierarchy, and practical settings controls.
 
 ## Features
 
@@ -16,7 +15,7 @@ https://github.com/NicosNicolaou16/Material_3_Expressive_List
 - System font or imported **TTF/OTF** font.
 - Light, dark, or system app theme.
 - Dynamic Material colors on supported Android versions.
-- Large rounded surfaces and list-style settings inspired by Material 3 Expressive.
+- Material 3 switches, buttons, sliders, cards, and dialogs.
 - Automatic refresh at the next calendar day.
 - Persistent ongoing notification.
 - Battery-optimization guidance.
@@ -42,16 +41,17 @@ This architecture is deliberately no-root and uses only public Android notificat
 
 ## Interface design
 
-The app uses Material 3 components with an expressive visual direction:
+The app uses Material 3 components with a clean, expressive visual direction:
 
-- Larger typography for primary sections.
-- Generous spacing and 28dp rounded surfaces.
-- Tonal surface containers and subtle outlines.
-- Grouped list-like settings rows.
-- Clear hierarchy between preview, controls, and secondary settings.
+- Clear typography and section hierarchy.
+- Rounded surface containers.
+- Material 3 switches with visible **ON/OFF** state labels.
+- Material 3 buttons, sliders, cards, and dialogs.
+- Grouped settings with consistent spacing.
+- Preview and controls kept visually separate.
 - System/light/dark theme choices with dynamic colors where supported.
 
-This is a View-based Android implementation, while the referenced project is a Jetpack Compose showcase. The repository is used as a design reference rather than copied code.
+The implementation is View-based and uses Android Material components directly. The project keeps its own implementation and architecture.
 
 ## Usage
 
@@ -88,10 +88,3 @@ The debug build uses the standard Android debug signing configuration, so no rel
 - DayNotificationReceiver.kt — boot/date-change restoration.
 - FontManager.kt — system/custom font handling.
 - .github/workflows/build.yml — automated build and APK verification.
-
-## Design reference
-
-Primary UI reference:
-https://github.com/NicosNicolaou16/Material_3_Expressive_List
-
-The project is used for visual and interaction inspiration only; Statusbarplus keeps its own implementation and architecture.
