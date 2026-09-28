@@ -47,4 +47,15 @@
     <string name="padding_value">%1$d dp</string>
     <string name="spacing_value">%1$d dp</string>
     <string name="reset_layout">Reset tata letak</string>
+    <string name="backup_title">Cadangkan &amp; pulihkan</string>
+    <string name="backup_body">Simpan pengaturan Statusbarplus, termasuk font TTF/OTF kustom, ke satu file backup. Akses file hanya diberikan setelah Anda memilih lokasi atau file melalui pemilih sistem.</string>
+    <string name="backup_create">Buat backup</string>
+    <string name="backup_restore">Pulihkan backup</string>
+    <string name="backup_restore_confirm_title">Pulihkan pengaturan?</string>
+    <string name="backup_restore_confirm_body">Pengaturan Statusbarplus saat ini akan diganti dengan isi backup yang Anda pilih. Jika backup berisi font kustom, font tersebut juga akan dipulihkan.</string>
+    <string name="backup_restore_confirm">Pulihkan</string>
+    <string name="backup_create_success">Backup berhasil disimpan.</string>
+    <string name="backup_create_failed">Backup gagal disimpan.</string>
+    <string name="backup_restore_success">Backup berhasil dipulihkan.</string>
+    <string name="backup_restore_failed">File backup tidak valid atau gagal dibaca.</string>
 </resources>
