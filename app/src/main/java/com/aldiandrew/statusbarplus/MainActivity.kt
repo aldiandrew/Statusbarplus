@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 elevation = 0f
             },
-            LinearLayout.LayoutParams(-1, dp(72f))
+            LinearLayout.LayoutParams(-1, dp(64f))
         )
 
         val scroll = ScrollView(this).apply {
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         }
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16f), dp(8f), dp(16f), dp(28f))
+            setPadding(dp(16f), dp(8f), dp(16f), dp(20f))
         }
         scroll.addView(content)
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -129,11 +129,11 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.hero_title), 28f, true), lp())
-                    addView(text(getString(R.string.hero_body), 14f, false), lp(6))
+                    addView(text(getString(R.string.hero_title), 22f, true), lp())
+                    addView(text(getString(R.string.hero_body), 14f, false), lp(8))
                     preview = text("", 22f, true).apply {
                         gravity = Gravity.CENTER
-                        setPadding(0, dp(18f), 0, dp(6f))
+                        setPadding(0, dp(12f), 0, dp(4f))
                     }
                     addView(preview, lp())
                 })
@@ -144,52 +144,43 @@ class MainActivity : AppCompatActivity() {
 
         content.addView(
             card().apply {
-                addView(
-                    listRow(
-                        title = getString(R.string.show_day),
-                        subtitle = getString(R.string.show_day_body)
-                    ).apply {
-                        daySwitch = MaterialSwitch(this@MainActivity).apply {
-                            showText = false
-                            isChecked = prefs.getBoolean("enabled", false)
-                            setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
-                        }
-                        addView(daySwitch, LinearLayout.LayoutParams(dp(52f), dp(40f)).apply {
-                            gravity = Gravity.CENTER_VERTICAL
-                        })
+                addView(box().apply {
+                    daySwitch = MaterialSwitch(this@MainActivity).apply {
+                        showText = false
+                        isChecked = prefs.getBoolean("enabled", false)
+                        setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
                     }
-                )
-                status = text("", 13f, false).apply {
-                    setPadding(dp(16f), 0, dp(16f), dp(14f))
-                }
-                addView(status, lp())
-                addView(
-                    MaterialButton(this@MainActivity).apply {
-                        text = getString(R.string.notification_settings)
-                        setOnClickListener {
-                            startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                            })
-                        }
-                    },
-                    lp(4)
-                )
+                    addView(daySwitch, lp())
+                    status = text("", 13f, false)
+                    addView(status, lp(2))
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.notification_settings)
+                            setOnClickListener {
+                                startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                })
+                            }
+                        },
+                        lp(8)
+                    )
+                })
             },
-            lp(12)
+            lp(10)
         )
 
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.display_title), 20f, true), lp())
-                    addView(text(getString(R.string.display_body), 13f, false), lp(4))
+                    addView(text(getString(R.string.display_title), 17f, true), lp())
+                    addView(text(getString(R.string.display_body), 13f, false), lp(8))
                     displayModeButton = MaterialButton(this@MainActivity).apply {
                         text = displayModeLabel()
                         setOnClickListener { showDisplayModeChooser() }
                     }
-                    addView(displayModeButton, lp(10))
+                    addView(displayModeButton, lp(4))
                     sizeLabel = text("", 14f, true)
-                    addView(sizeLabel, lp(10))
+                    addView(sizeLabel, lp(8))
                     addView(
                         Slider(this@MainActivity).apply {
                             valueFrom = 12f
@@ -211,29 +202,29 @@ class MainActivity : AppCompatActivity() {
                     )
                 })
             },
-            lp(12)
+            lp(10)
         )
 
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.font_title), 20f, true), lp())
-                    addView(text(getString(R.string.font_body), 13f, false), lp(4))
+                    addView(text(getString(R.string.font_title), 17f, true), lp())
+                    addView(text(getString(R.string.font_body), 13f, false), lp(8))
                     fontButton = MaterialButton(this@MainActivity).apply {
                         text = fontLabel()
                         setOnClickListener { showFontChooser() }
                     }
-                    addView(fontButton, lp(10))
+                    addView(fontButton, lp(8))
                 })
             },
-            lp(12)
+            lp(10)
         )
 
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.layout_title), 20f, true), lp())
-                    addView(text(getString(R.string.layout_body), 13f, false), lp(4))
+                    addView(text(getString(R.string.layout_title), 17f, true), lp())
+                    addView(text(getString(R.string.layout_body), 13f, false), lp(8))
                     addLayoutSlider(this, R.string.horizontal_offset, "horizontal_offset", -12f, 12f, 0f)
                     addLayoutSlider(this, R.string.vertical_offset, "vertical_offset", -12f, 12f, 0f)
                     addLayoutSlider(this, R.string.layout_padding, "layout_padding", 0f, 18f, 4f)
@@ -243,42 +234,42 @@ class MainActivity : AppCompatActivity() {
                             text = getString(R.string.reset_layout)
                             setOnClickListener { resetTextLayout() }
                         },
-                        lp(12)
+                        lp(10)
                     )
                 })
             },
-            lp(12)
+            lp(10)
         )
 
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.background_title), 20f, true), lp())
-                    addView(text(getString(R.string.background_body), 13f, false), lp(4))
+                    addView(text(getString(R.string.background_title), 17f, true), lp())
+                    addView(text(getString(R.string.background_body), 13f, false), lp(8))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
                         setOnClickListener { requestBatteryExemption() }
                     }
-                    addView(backgroundButton, lp(10))
+                    addView(backgroundButton, lp(8))
                 })
             },
-            lp(12)
+            lp(10)
         )
 
         content.addView(
             card().apply {
                 addView(box().apply {
-                    addView(text(getString(R.string.theme_title), 20f, true), lp())
-                    addView(text(getString(R.string.theme_body), 13f, false), lp(4))
+                    addView(text(getString(R.string.theme_title), 17f, true), lp())
+                    addView(text(getString(R.string.theme_body), 13f, false), lp(8))
                     addView(MaterialButton(this@MainActivity).apply {
                         text = themeLabel()
                         setOnClickListener { showThemeChooser() }
-                    }, lp(10))
+                    }, lp(6))
                 })
             },
-            lp(12)
+            lp(10)
         )
 
-        content.addView(text(getString(R.string.note), 12f, false), lp(16))
+        content.addView(text(getString(R.string.note), 12f, false), lp(12))
         setContentView(root)
         updateState()
         updateBackgroundState()
@@ -581,16 +572,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun card() = MaterialCardView(this).apply {
-        radius = dp(28f).toFloat()
-        strokeWidth = dp(1f)
-        strokeColor = resolveColor(com.google.android.material.R.attr.colorOutlineVariant)
+        radius = dp(20f).toFloat()
+        strokeWidth = 0
         cardElevation = 0f
-        setCardBackgroundColor(resolveColor(com.google.android.material.R.attr.colorSurfaceContainer))
     }
 
     private fun box() = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(20f), dp(18f), dp(20f), dp(18f))
+        setPadding(dp(16f), dp(14f), dp(16f), dp(14f))
     }
 
     private fun text(value: String, size: Float, bold: Boolean) = TextView(this).apply {
