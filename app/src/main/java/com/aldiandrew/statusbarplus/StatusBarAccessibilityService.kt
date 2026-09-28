@@ -182,20 +182,21 @@ class StatusBarAccessibilityService : AccessibilityService() {
         // This avoids treating Android 15/16 edge-to-edge app windows as
         // fullscreen merely because their content occupies the whole display.
         val bar = statusBarHeight()
-        val systemWindowVisible = windows.any { window ->
-            if (window.type != android.view.accessibility.AccessibilityWindowInfo.TYPE_SYSTEM) {
-                false
-            } else {
+        val systemWindows = windows.filter {
+            it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_SYSTEM
+        }
+        if (systemWindows.isNotEmpty()) {
+            return systemWindows.any { window ->
                 val bounds = android.graphics.Rect()
                 window.getBoundsInScreen(bounds)
                 bounds.top <= 1 && bounds.height() <= bar * 2
             }
         }
-        if (systemWindowVisible) return true
 
-        // If SystemUI does not expose its status-bar window to accessibility,
-        // keep the overlay visible rather than risking a permanent false hide.
-        return windows.isEmpty()
+        // Some SystemUI builds do not expose the status-bar window through
+        // Accessibility. In that case keep the overlay visible rather than
+        // permanently hiding it on edge-to-edge Android 16 apps.
+        return true
     }
 
     private fun removeOverlay() {
