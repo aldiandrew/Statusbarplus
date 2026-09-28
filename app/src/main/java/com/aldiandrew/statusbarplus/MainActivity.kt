@@ -146,13 +146,10 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     daySwitch = MaterialSwitch(this@MainActivity).apply {
-                        // Material 3 switch: keep the state label inside the control
-                        // while preserving the standard rounded switch proportions.
-                        showText = true
-                        textOn = "ON"
-                        textOff = "OFF"
-                        minWidth = dp(64f)
-                        minimumWidth = dp(64f)
+                        // Material 3 switch without ON/OFF text labels.
+                        showText = false
+                        minWidth = dp(52f)
+                        minimumWidth = dp(52f)
                         minHeight = dp(32f)
                         minimumHeight = dp(32f)
                         isChecked = prefs.getBoolean("enabled", false)
