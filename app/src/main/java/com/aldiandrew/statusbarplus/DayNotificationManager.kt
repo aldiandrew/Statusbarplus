@@ -48,7 +48,6 @@ object DayNotificationManager {
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
             .setCategory(Notification.CATEGORY_STATUS)
-            .setSilent(true)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .build()
 
