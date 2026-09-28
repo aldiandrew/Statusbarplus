@@ -110,18 +110,14 @@ object DayNotificationManager {
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
-        val textSize = sizeSp.coerceIn(12f, 22f) * scaledDensity
+        val requestedSizeSp = sizeSp.coerceIn(12f, 22f)
+        val textSize = requestedSizeSp * scaledDensity
+        val maxTextSize = 22f * scaledDensity
 
-        // Small notification icons are rendered by SystemUI into a fixed status-bar
-        // slot. The previous 48dp canvas caused SystemUI to scale the whole bitmap
-        // down, making the font-size slider appear ineffective.
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
-            color = android.graphics.Color.WHITE
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            this.textSize = textSize
-            textAlign = Paint.Align.CENTER
-        }
-
+        // SystemUI scales a small notification icon into a fixed status-bar slot.
+        // Keep the bitmap canvas based on the MAXIMUM size, not the selected size.
+        // This is the key fix: changing the slider now changes the glyph size
+        // inside the same icon slot instead of scaling the entire bitmap equally.
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
             "day_date_month" -> listOf(day, "$date $month")
@@ -129,18 +125,30 @@ object DayNotificationManager {
             else -> listOf(day)
         }
 
-        val lineHeight = (textSize * 1.05f).coerceAtLeast(1f)
-        val lineGap = if (lines.size > 1) 1.5f * density else 0f
-        val horizontalPadding = 1.5f * density
-        val width = lines.maxOf { paint.measureText(it) }.let {
-            (it + horizontalPadding * 2).coerceAtLeast(12f * density).toInt()
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            this.textSize = textSize
+            textAlign = Paint.Align.CENTER
         }
-        val height = (lineHeight * lines.size + lineGap + 2f * density).toInt()
+        val maxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            textSize = if (lines.size > 1) 18f * scaledDensity else maxTextSize
+            textAlign = Paint.Align.CENTER
+        }
+
+        val lineHeight = (textSize * 1.05f).coerceAtLeast(1f)
+        val maxLineHeight = (maxPaint.textSize * 1.05f).coerceAtLeast(1f)
+        val lineGap = if (lines.size > 1) 1.5f * density else 0f
+        val horizontalPadding = 2f * density
+        val width = (lines.maxOf { maxPaint.measureText(it) } + horizontalPadding * 2)
+            .coerceAtLeast(20f * density).toInt()
+        val height = (48f * density).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
+
         val totalTextHeight = lineHeight * lines.size + lineGap
         var baseline = (height - totalTextHeight) / 2f - paint.ascent
-
         for (line in lines) {
             canvas.drawText(line, width / 2f, baseline, paint)
             baseline += lineHeight + lineGap
