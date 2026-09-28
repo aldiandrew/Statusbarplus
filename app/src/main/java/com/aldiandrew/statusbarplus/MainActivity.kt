@@ -210,21 +210,19 @@ class MainActivity : AppCompatActivity() {
             lp(10)
         )
 
-        if (BuildConfig.IS_PRO) {
-            content.addView(
-                card().apply {
-                    addView(box().apply {
-                        addView(text(getString(R.string.pro_format_title), 17f, true), lp())
-                        addView(text(getString(R.string.pro_format_body), 13f, false), lp(3))
-                        addView(MaterialButton(this@MainActivity).apply {
-                            text = proDateFormatLabel()
-                            setOnClickListener { showProDateFormatChooser() }
-                        }, lp(8))
-                    })
-                },
-                lp(10)
-            )
-        }
+        content.addView(
+            card().apply {
+                addView(box().apply {
+                    addView(text(getString(R.string.format_title), 17f, true), lp())
+                    addView(text(getString(R.string.format_body), 13f, false), lp(3))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = dateFormatLabel()
+                        setOnClickListener { showDateFormatChooser() }
+                    }, lp(8))
+                })
+            },
+            lp(10)
+        )
 
         content.addView(
             card().apply {
@@ -475,14 +473,14 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun proDateFormatLabel(): String = when (prefs.getString("pro_date_format", "d")) {
-        "dd" -> getString(R.string.pro_format_dd)
+    private fun dateFormatLabel(): String = when (prefs.getString("date_format", "d")) {
+        "dd" -> getString(R.string.format_dd)
         "d MMM" -> getString(R.string.pro_format_d_mmm)
         "dd MMM" -> getString(R.string.pro_format_dd_mmm)
         else -> getString(R.string.pro_format_d)
     }
 
-    private fun showProDateFormatChooser() {
+    private fun showDateFormatChooser() {
         val choices = arrayOf(
             getString(R.string.pro_format_d),
             getString(R.string.pro_format_dd),
@@ -504,7 +502,7 @@ class MainActivity : AppCompatActivity() {
                     3 -> "dd MMM"
                     else -> "d"
                 }
-                prefs.edit().putString("pro_date_format", format).apply()
+                prefs.edit().putString("date_format", format).apply()
                 DayNotificationManager.show(this)
                 dialog.dismiss()
             }
