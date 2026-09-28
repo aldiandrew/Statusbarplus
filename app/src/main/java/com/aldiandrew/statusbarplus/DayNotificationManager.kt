@@ -43,7 +43,7 @@ object DayNotificationManager {
                 date = date,
                 month = month,
                 mode = mode,
-                sizeSp = prefs.getFloat("text_size", 18f)
+                sizeSp = prefs.getFloat("text_size", 20f)
             )
         )
 
@@ -142,7 +142,7 @@ object DayNotificationManager {
             // value remains the user's preference, but is automatically fitted
             // instead of being clipped.
             ((canvasHeightPx(canvasHeight, lines.size, density) / lines.size)
-                .coerceAtMost(18f * scaledDensity))
+                .coerceAtMost(20f * scaledDensity))
         } else {
             canvasHeight * 0.84f
         }
@@ -161,8 +161,9 @@ object DayNotificationManager {
             textAlign = Paint.Align.CENTER
         }
 
-        val lineHeight = (textSize * 1.02f).coerceAtLeast(1f)
-        val lineGap = if (multiLine) 0f else 0f
+        val metrics = paint.fontMetrics
+        val lineHeight = (metrics.descent - metrics.ascent).coerceAtLeast(1f)
+        val lineGap = 0f
         val horizontalPadding = 2f * density
         val width = (lines.maxOf { maxLinePaint.measureText(it) } + horizontalPadding * 2)
             .coerceAtLeast(20f * density).toInt()
@@ -170,9 +171,9 @@ object DayNotificationManager {
         val bitmap = Bitmap.createBitmap(width, canvasHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val totalTextHeight = lineHeight * lines.size + lineGap * (lines.size - 1)
-        val top = ((canvasHeight - totalTextHeight) / 2f).coerceAtLeast(0f)
-        var baseline = top - paint.ascent()
+        val totalTextHeight = lineHeight * lines.size
+        val firstBaseline = (canvasHeight - totalTextHeight) / 2f - metrics.ascent
+        var baseline = firstBaseline
         for (line in lines) {
             canvas.drawText(line, width / 2f, baseline, paint)
             baseline += lineHeight + lineGap
