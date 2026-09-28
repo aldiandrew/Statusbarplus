@@ -1,32 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Statusbarplus</string>
-    <string name="subtitle">Day in status bar</string>
-    <string name="hero_title">Day, like a system notification</string>
-    <string name="hero_body">Shows the day and date as a normal notification icon in the status bar. Text size adapts to the device status-bar space and works without root, Xposed, Accessibility, or Shizuku.</string>
-    <string name="show_day">Show day</string>
+    <string name="subtitle">Date in the status bar</string>
+    <string name="hero_title">Date, with a simple expressive look</string>
+    <string name="hero_body">Shows the day, date, or date + month as a normal notification icon in the status bar. Lightweight and designed to work without root, Xposed, Accessibility, overlays, or Shizuku.</string>
+    <string name="show_day">Show in status bar</string>
+    <string name="show_day_body">Turn calendar information in the status bar on or off.</string>
     <string name="notification_settings">Notification settings</string>
     <string name="background_title">Background operation</string>
     <string name="background_body">Allow Statusbarplus to bypass battery optimization so the notification and midnight update are less likely to be delayed by the system.</string>
     <string name="background_allow">Allow background operation</string>
-    <string name="background_allowed">Background operation allowed.</string>
-    <string name="display_title">Day display</string>
-    <string name="text_size">Status-bar text size: %1$d sp</string>
-    <string name="display_mode_title">Status-bar content</string>
+    <string name="background_allowed">Background operation allowed</string>
+    <string name="display_title">Status-bar content</string>
+    <string name="display_body">Choose the information to display. This only changes the notification icon content.</string>
+    <string name="text_size">Text size: %1$d sp</string>
+    <string name="display_mode_title">Choose content</string>
     <string name="mode_day">Day only</string>
     <string name="mode_day_date">Day + date</string>
-    <string name="mode_day_date_month">Day + date + month</string>
     <string name="mode_date_month">Date + month</string>
     <string name="theme_title">App theme</string>
+    <string name="theme_body">Choose system, light, or dark appearance.</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="permission_needed">Notification permission is required.</string>
-    <string name="active">Active • using an Android status-bar notification.</string>
-    <string name="inactive">Inactive.</string>
-    <string name="notification_description">Current day</string><string name="note">Text size adapts to the device status-bar area so it stays readable without clipping. This mode uses a normal Android notification.</string>
+    <string name="active">Active • using an Android status-bar notification</string>
+    <string name="inactive">Inactive</string>
+    <string name="notification_description">Current calendar information</string>
+    <string name="note">Statusbarplus uses a normal Android notification icon. The final notification slot position, spacing from the clock, tint, and scaling remain controlled by System UI.</string>
     <string name="guide_title">How to use Statusbarplus</string>
-    <string name="guide_body">1. Turn on “Show day”.\n\n2. Choose the status-bar content: day, day + date, day + date + month, or date + month.\n\n3. Adjust the text size. It adapts to the device status-bar space so it remains readable without clipping.\n\n4. Choose the system font or import your own TTF/OTF font.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>
+    <string name="guide_body">1. Turn on “Show in status bar”.\n\n2. Choose day, day + date, or date + month.\n\n3. Adjust text size and layout if needed.\n\n4. Choose the system font or import your own TTF/OTF font.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>
     <string name="guide_continue">Continue</string>
     <string name="guide_later">Later</string>
     <string name="font_title">Status-bar font</string>
@@ -34,4 +37,13 @@
     <string name="font_system">System font</string>
     <string name="font_custom">My TTF/OTF font…</string>
     <string name="font_invalid">The selected file is not a valid TTF/OTF font.</string>
+    <string name="layout_title">Text layout</string>
+    <string name="layout_body">Adjust offset, padding, and line spacing inside the notification icon. The slot position relative to the clock cannot be controlled by the app.</string>
+    <string name="horizontal_offset">Horizontal offset</string>
+    <string name="vertical_offset">Vertical offset</string>
+    <string name="layout_padding">Padding</string>
+    <string name="line_spacing">Line spacing</string>
+    <string name="offset_value">%1$d dp</string>
+    <string name="padding_value">%1$d dp</string>
+    <string name="spacing_value">%1$d dp</string>
 </resources>
