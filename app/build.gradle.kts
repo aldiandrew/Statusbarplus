@@ -16,22 +16,12 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 4
-        versionName = "3.0"
-
-        buildConfigField("boolean", "IS_PRO", "false")
-    }
+        versionName = "3.0"    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
-    flavorDimensions += "edition"
-
-    productFlavors {
-        create("free") {
-            dimension = "edition"
-        }
         create("pro") {
             dimension = "edition"
             applicationIdSuffix = ".pro"
