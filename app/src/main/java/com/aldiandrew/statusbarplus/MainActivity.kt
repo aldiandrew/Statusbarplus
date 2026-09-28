@@ -255,9 +255,9 @@ class MainActivity : AppCompatActivity() {
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         preview.text = when (prefs.getString("display_mode", "day")) {
-            "day_date" -> "12:34   $day\n             $date"
-            "day_date_month" -> "12:34   $day\n             $date $month"
-            "date_month" -> "12:34   $date\n             $month"
+            "day_date" -> "12:34   $day $date"
+            "day_date_month" -> "12:34   $day $date $month"
+            "date_month" -> "12:34   $date $month"
             else -> "12:34   $day"
         }
         preview.typeface = FontManager.getTypeface(this)
