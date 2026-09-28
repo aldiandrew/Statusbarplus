@@ -3,7 +3,7 @@
     <string name="app_name">Statusbarplus</string>
     <string name="subtitle">Hari di status bar</string>
     <string name="hero_title">Hari, seperti notifikasi sistem</string>
-    <string name="hero_body">Mode teks menggunakan TextView nyata di atas SystemUI, sehingga tidak memakai bitmap untuk menampilkan hari/tanggal. Tetap tanpa root, Xposed, dan Shizuku.</string>
+    <string name="hero_body">Menampilkan hari dan tanggal sebagai ikon notifikasi di status bar. Ukuran teks menyesuaikan ruang status bar perangkat dan tetap tanpa root, Xposed, Accessibility, atau Shizuku.</string>
     <string name="show_day">Tampilkan hari</string>
     <string name="notification_settings">Pengaturan notifikasi</string>
     <string name="background_title">Berjalan di latar belakang</string>
@@ -23,24 +23,24 @@
     <string name="theme_light">Terang</string>
     <string name="theme_dark">Gelap</string>
     <string name="permission_needed">Izin notifikasi diperlukan untuk mode fallback.</string>
-    <string name="active_text_mode">Aktif • mode teks menggunakan Accessibility Overlay.</string>
+    
     <string name="active">Aktif • menggunakan notifikasi status bar Android.</string>
     <string name="inactive">Tidak aktif.</string>
     <string name="notification_description">Hari saat ini</string>
-    <string name="note">Mode teks mengikuti posisi jam SystemUI secara dinamis. Tidak membutuhkan root, Xposed, atau Shizuku. Accessibility Service perlu diaktifkan hanya jika ingin teks langsung di status bar.</string>
+    <string name="note">Ukuran teks menyesuaikan ukuran area status bar perangkat agar tetap jelas dan tidak terpotong. Mode ini menggunakan notifikasi Android biasa.</string>
     <string name="guide_title">Cara menggunakan Statusbarplus</string>
-    <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Untuk teks nyata di status bar tanpa bitmap, buka “Mode teks status bar” lalu aktifkan Statusbarplus di Pengaturan Aksesibilitas. Mode ini menggunakan Accessibility Overlay dan tidak membutuhkan root, Xposed, atau Shizuku.\n\n3. Pilih isi status bar, font, dan ukuran teks. Ukuran mode dua baris otomatis dibatasi agar tidak terpotong.\n\n4. Jika mode teks tidak diaktifkan, aplikasi memakai notifikasi fallback dan memerlukan izin notifikasi.\n\n5. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
+    <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Pilih isi status bar: hari, hari + tanggal, hari + tanggal + bulan, atau tanggal + bulan.\n\n3. Atur ukuran teks. Ukuran akan menyesuaikan ruang status bar perangkat agar tetap terbaca dan tidak terpotong.\n\n4. Pilih font sistem atau impor font TTF/OTF sendiri.\n\n5. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
     <string name="guide_continue">Lanjutkan</string>
     <string name="guide_later">Nanti</string>
-    <string name="text_mode_title">Mode teks status bar</string>
-    <string name="text_mode_body">Gunakan TextView nyata yang mengikuti posisi jam SystemUI. Tidak menggunakan bitmap. Memerlukan izin Accessibility Service.</string>
-    <string name="text_mode_enable">Aktifkan di Pengaturan Aksesibilitas</string>
-    <string name="text_mode_enabled">Accessibility Service aktif</string>
-    <string name="accessibility_service_description">Menampilkan teks hari/tanggal Statusbarplus sebagai overlay di area jam status bar.</string>
+    
+    
+    
+    
+    
     <string name="font_title">Font status bar</string>
-    <string name="font_body">Pilih Google Font atau gunakan font sendiri TTF/OTF. Font yang dipilih digunakan pada teks status bar dan preview.</string>
+    <string name="font_body">Gunakan font sistem atau impor satu font TTF/OTF pilihan Anda.</string>
     <string name="font_system">Font sistem</string>
     <string name="font_custom">Font TTF/OTF saya…</string>
-    <string name="font_download_failed">Font gagal diunduh. Periksa koneksi internet lalu coba lagi.</string>
+    
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
 </resources>
