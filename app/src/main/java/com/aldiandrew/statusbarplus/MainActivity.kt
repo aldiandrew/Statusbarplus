@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         buildUi()
         requestNotificationPermissionIfNeeded()
+        showFirstUseGuideIfNeeded()
     }
 
     override fun onResume() {
@@ -248,6 +249,22 @@ class MainActivity : AppCompatActivity() {
             android.graphics.Typeface.NORMAL
         )
         preview.textSize = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
+    }
+
+    private fun showFirstUseGuideIfNeeded() {
+        if (prefs.getBoolean("first_use_guide_shown", false)) return
+        prefs.edit().putBoolean("first_use_guide_shown", true).apply()
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.guide_title))
+            .setMessage(getString(R.string.guide_body))
+            .setPositiveButton(getString(R.string.guide_continue)) { _, _ ->
+                if (!hasNotificationPermission()) {
+                    requestNotificationPermissionIfNeeded()
+                }
+            }
+            .setNegativeButton(getString(R.string.guide_later), null)
+            .show()
     }
 
     private fun requestNotificationPermissionIfNeeded() {
