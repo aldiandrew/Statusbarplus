@@ -3,11 +3,11 @@
     <string name="app_name">Statusbarplus</string>
     <string name="subtitle">Day in status bar</string>
     <string name="hero_title">Day, like a system notification</string>
-    <string name="hero_body">Text mode uses a real TextView over SystemUI, so the day/date is not rendered as a bitmap. It still works without root, Xposed, or Shizuku.</string>
+    <string name="hero_body">Shows the day and date as a normal notification icon in the status bar. Text size adapts to the device status-bar space and works without root, Xposed, Accessibility, or Shizuku.</string>
     <string name="show_day">Show day</string>
     <string name="notification_settings">Notification settings</string>
     <string name="background_title">Background operation</string>
-    <string name="background_body">Optionally allow Statusbarplus to bypass battery optimization so the daily update is less likely to be delayed by the system.</string>
+    <string name="background_body">Optionally allow Statusbarplus to bypass battery optimization so the daily notification and midnight update are less likely to be delayed by the system.</string>
     <string name="background_allow">Allow background operation</string>
     <string name="background_allowed">Background operation allowed.</string>
     <string name="display_title">Day display</string>
@@ -22,24 +22,18 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="permission_needed">Notification permission is required for fallback mode.</string>
-    <string name="active_text_mode">Active • text mode uses an Accessibility Overlay.</string>
+    <string name="permission_needed">Notification permission is required.</string>
     <string name="active">Active • using an Android status-bar notification.</string>
     <string name="inactive">Inactive.</string>
     <string name="notification_description">Current day</string>
-    <string name="note">Text mode follows the SystemUI clock position dynamically. It does not require root, Xposed, or Shizuku. Accessibility Service is only needed when text mode is enabled.</string>
+    <string name="note">Text size adapts to the device status-bar area so it stays readable without clipping. This mode uses a normal Android notification.</string>
     <string name="guide_title">How to use Statusbarplus</string>
-    <string name="guide_body">1. Turn on “Show day”.\n\n2. For real text in the status bar without bitmap rendering, open “Status bar text mode” and enable Statusbarplus in Accessibility settings. This uses an Accessibility Overlay and does not require root, Xposed, or Shizuku.\n\n3. Choose the status-bar content, font, and text size. Two-line modes are automatically capped to avoid clipping.\n\n4. If text mode is not enabled, the app uses notification fallback and needs notification permission.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>\n    <string name="guide_continue">Continue</string>
+    <string name="guide_body">1. Turn on “Show day”.\n\n2. Choose the status-bar content: day, day + date, day + date + month, or date + month.\n\n3. Adjust the text size. It adapts to the device status-bar space so it remains readable without clipping.\n\n4. Choose the system font or import your own TTF/OTF font.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>
+    <string name="guide_continue">Continue</string>
     <string name="guide_later">Later</string>
-    <string name="text_mode_title">Status bar text mode</string>
-    <string name="text_mode_body">Use a real TextView that follows the SystemUI clock position. No bitmap rendering. Requires Accessibility Service.</string>
-    <string name="text_mode_enable">Enable in Accessibility settings</string>
-    <string name="text_mode_enabled">Accessibility Service is active</string>
-    <string name="accessibility_service_description">Displays Statusbarplus day/date text as an overlay around the status-bar clock.</string>
     <string name="font_title">Status bar font</string>
-    <string name="font_body">Choose a Google Font or import your own TTF/OTF. The selected font is used for the status-bar text and preview.</string>
+    <string name="font_body">Use the system font or import one TTF/OTF font of your choice.</string>
     <string name="font_system">System font</string>
     <string name="font_custom">My TTF/OTF font…</string>
-    <string name="font_download_failed">Could not download the font. Check your internet connection and try again.</string>
     <string name="font_invalid">The selected file is not a valid TTF/OTF font.</string>
 </resources>
