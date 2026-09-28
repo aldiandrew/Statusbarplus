@@ -146,7 +146,13 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     daySwitch = MaterialSwitch(this@MainActivity).apply {
-                        showText = false
+                        // Keep ON/OFF visible and give the switch enough width
+                        // so the state text never overlaps or gets clipped.
+                        showText = true
+                        textOn = "ON"
+                        textOff = "OFF"
+                        minWidth = dp(68f)
+                        minimumWidth = dp(68f)
                         isChecked = prefs.getBoolean("enabled", false)
                         setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
                     }
