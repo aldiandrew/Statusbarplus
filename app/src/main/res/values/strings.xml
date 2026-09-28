@@ -31,4 +31,10 @@
     <string name="guide_body">1. Aktifkan “Tampilkan hari”.\n\n2. Izinkan notifikasi saat Android memintanya. Izin ini diperlukan karena tanggal/hari ditampilkan sebagai ikon notifikasi di status bar.\n\n3. Pilih isi status bar dan ukuran teks. Ukuran akan disesuaikan otomatis agar tidak terpotong.\n\n4. Jika perangkat sering menghentikan aplikasi di latar belakang, buka “Izinkan penggunaan latar belakang” dan berikan pengecualian optimasi baterai. Ini opsional.\n\nAplikasi tidak memakai Accessibility Service, overlay, root, atau layanan yang terus berjalan. Pembaruan dilakukan saat pengaturan berubah dan sekitar pergantian hari.</string>
     <string name="guide_continue">Lanjutkan</string>
     <string name="guide_later">Nanti</string>
+    <string name="font_title">Font status bar</string>
+    <string name="font_body">Pilih Google Font atau gunakan font sendiri TTF/OTF. Font yang dipilih digunakan pada teks status bar dan preview.</string>
+    <string name="font_system">Font sistem</string>
+    <string name="font_custom">Font TTF/OTF saya…</string>
+    <string name="font_download_failed">Font gagal diunduh. Periksa koneksi internet lalu coba lagi.</string>
+    <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
 </resources>
