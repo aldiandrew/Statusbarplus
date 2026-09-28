@@ -113,9 +113,9 @@ object DayNotificationManager {
         val requestedSp = sizeSp.coerceIn(12f, 22f)
         val multiLine = mode != "day"
 
-        // Small notification icons are normalized by SystemUI into a fixed slot.
-        // Use a compact canvas and size the glyph against the device status-bar
-        // height so the result tracks the visual scale of the system clock.
+        // SystemUI normalizes notification icons into a fixed status-bar slot.
+        // Use the device status-bar height as the reference so a single-line
+        // day follows the visual scale of the system clock.
         val statusBarHeightPx = context.resources.run {
             val id = getIdentifier("status_bar_height", "dimen", "android")
             if (id != 0) getDimensionPixelSize(id) else (24f * density).toInt()
@@ -138,11 +138,8 @@ object DayNotificationManager {
         }
         val desiredTextSize = requestedSp * scaledDensity * modeScale
         val maxTextSize = if (multiLine) {
-            // Keep two-line layouts inside the same status-bar slot. The selected
-            // value remains the user's preference, but is automatically fitted
-            // instead of being clipped.
-            ((canvasHeightPx(canvasHeight, lines.size, density) / lines.size)
-                .coerceAtMost(20f * scaledDensity))
+            ((canvasHeight - 2f * density) / lines.size)
+                .coerceAtMost(20f * scaledDensity)
         } else {
             canvasHeight * 0.84f
         }
@@ -155,35 +152,22 @@ object DayNotificationManager {
             textAlign = Paint.Align.CENTER
         }
 
-        val maxLinePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            this.textSize = textSize
-            textAlign = Paint.Align.CENTER
-        }
-
         val metrics = paint.fontMetrics
         val lineHeight = (metrics.descent - metrics.ascent).coerceAtLeast(1f)
-        val lineGap = 0f
         val horizontalPadding = 2f * density
-        val width = (lines.maxOf { maxLinePaint.measureText(it) } + horizontalPadding * 2)
+        val width = (lines.maxOf { paint.measureText(it) } + horizontalPadding * 2)
             .coerceAtLeast(20f * density).toInt()
 
         val bitmap = Bitmap.createBitmap(width, canvasHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val totalTextHeight = lineHeight * lines.size
-        val firstBaseline = (canvasHeight - totalTextHeight) / 2f - metrics.ascent
-        var baseline = firstBaseline
+        var baseline = (canvasHeight - totalTextHeight) / 2f - metrics.ascent
         for (line in lines) {
             canvas.drawText(line, width / 2f, baseline, paint)
-            baseline += lineHeight + lineGap
+            baseline += lineHeight
         }
         return bitmap
-    }
-
-    private fun canvasHeightPx(heightPx: Int, lineCount: Int, density: Float): Float {
-        val availablePerLine = heightPx / lineCount.toFloat()
-        return (availablePerLine - 2f * density).coerceAtLeast(1f)
     }
 
     private fun scheduleNextDay(context: Context) {
