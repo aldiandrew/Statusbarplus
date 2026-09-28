@@ -7,10 +7,6 @@ android {
     namespace = "com.aldiandrew.statusbarplus"
     compileSdk = 36
 
-    buildFeatures {
-        buildConfig = true
-    }
-
     defaultConfig {
         applicationId = "com.aldiandrew.statusbarplus"
         minSdk = 30
