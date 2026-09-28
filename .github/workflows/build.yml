@@ -30,16 +30,13 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Build optimized free APK
-        run: gradle :app:assembleFreeOptimizedDebug --stacktrace
-
-      - name: Build optimized Pro APK
-        run: gradle :app:assembleProOptimizedDebug --stacktrace
+      - name: Build optimized APK
+        run: gradle :app:assembleOptimizedDebug --stacktrace
 
       - name: Verify APK
         run: |
           mapfile -t apks < <(find app/build/outputs/apk -type f -name 'app-*-optimizedDebug.apk' | sort)
-          test "${#apks[@]}" -eq 2
+          test "${#apks[@]}" -eq 1
           for apk in "${apks[@]}"; do
             $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 "$apk"
             $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$apk"
@@ -51,7 +48,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Statusbarplus-free-and-pro
+          name: Statusbarplus
           path: |
             app/build/outputs/apk/**/app-*-optimizedDebug.apk
           retention-days: 7
