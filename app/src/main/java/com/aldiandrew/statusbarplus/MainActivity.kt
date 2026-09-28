@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.widget.Toast
 import android.provider.Settings
 import android.view.Gravity
 import android.widget.LinearLayout
@@ -30,6 +31,10 @@ import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        private const val REQUEST_CREATE_BACKUP = 400
+        private const val REQUEST_RESTORE_BACKUP = 401
+    }
     private val prefs by lazy { getSharedPreferences("settings", Context.MODE_PRIVATE) }
     private lateinit var daySwitch: MaterialSwitch
     private lateinit var status: TextView
@@ -249,6 +254,30 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
+                    addView(text(getString(R.string.backup_title), 17f, true), lp())
+                    addView(text(getString(R.string.backup_body), 13f, false), lp(8))
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.backup_create)
+                            setOnClickListener { createBackup() }
+                        },
+                        lp(8)
+                    )
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.backup_restore)
+                            setOnClickListener { chooseBackupToRestore() }
+                        },
+                        lp(4)
+                    )
+                })
+            },
+            lp(10)
+        )
+
+        content.addView(
+            card().apply {
+                addView(box().apply {
                     addView(text(getString(R.string.background_title), 17f, true), lp())
                     addView(text(getString(R.string.background_body), 13f, false), lp(8))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
@@ -436,6 +465,62 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun createBackup() {
+        startActivityForResult(
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/zip"
+                putExtra(Intent.EXTRA_TITLE, "Statusbarplus-backup.zip")
+            },
+            REQUEST_CREATE_BACKUP
+        )
+    }
+
+    private fun chooseBackupToRestore() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/zip"
+            },
+            REQUEST_RESTORE_BACKUP
+        )
+    }
+
+    private fun restoreBackupWithConfirmation(uri: Uri) {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.backup_restore_confirm_title))
+            .setMessage(getString(R.string.backup_restore_confirm_body))
+            .setNegativeButton(getString(R.string.guide_later), null)
+            .setPositiveButton(getString(R.string.backup_restore_confirm)) { _, _ ->
+                Thread {
+                    val success = BackupManager.restoreBackup(this, uri)
+                    runOnUiThread {
+                        if (success) {
+                            if (prefs.getBoolean("enabled", false) && hasNotificationPermission()) {
+                                DayNotificationManager.show(this)
+                            } else {
+                                DayNotificationManager.cancel(this)
+                            }
+                            Toast.makeText(
+                                this,
+                                getString(R.string.backup_restore_success),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            applyThemeMode()
+                            recreate()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.backup_restore_failed),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }.start()
+            }
+            .show()
+    }
+
     private fun showThemeChooser() {
         val choices = arrayOf(
             getString(R.string.theme_system),
@@ -540,25 +625,45 @@ class MainActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Android API; kept for compatibility with the app's minSdk.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != 300 || resultCode != RESULT_OK || data?.data == null) return
-        Thread {
-            val success = FontManager.importCustom(this, data.data!!)
-            runOnUiThread {
-                if (success) {
-                    prefs.edit().putString("font_key", "custom").apply()
-                    fontButton.text = fontLabel()
-                    DayNotificationManager.show(this)
-                    updatePreview()
-                } else {
-                    android.widget.Toast.makeText(
-                        this,
-                        getString(R.string.font_invalid),
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
+        if (resultCode != RESULT_OK || data?.data == null) return
+
+        when (requestCode) {
+            300 -> {
+                Thread {
+                    val success = FontManager.importCustom(this, data.data!!)
+                    runOnUiThread {
+                        if (success) {
+                            prefs.edit().putString("font_key", "custom").apply()
+                            fontButton.text = fontLabel()
+                            DayNotificationManager.show(this)
+                            updatePreview()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.font_invalid),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }.start()
             }
-        }.start()
+            REQUEST_CREATE_BACKUP -> {
+                Thread {
+                    val success = BackupManager.writeBackup(this, data.data!!)
+                    runOnUiThread {
+                        Toast.makeText(
+                            this,
+                            if (success) getString(R.string.backup_create_success)
+                            else getString(R.string.backup_create_failed),
+                            if (success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }.start()
+            }
+            REQUEST_RESTORE_BACKUP -> restoreBackupWithConfirmation(data.data!!)
+        }
     }
+
 
     private fun themeLabel() = when (prefs.getString("theme_mode", "system")) {
         "light" -> getString(R.string.theme_light)
