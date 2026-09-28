@@ -10,7 +10,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.os.Build
 import java.text.SimpleDateFormat
@@ -27,31 +26,20 @@ object DayNotificationManager {
         if (!isEnabled(context)) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         ensureChannel(manager)
-
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
         val shortDay = prefs.getBoolean("short_day", true)
         val mode = prefs.getString("display_mode", "day") ?: "day"
-        val dayPattern = if (shortDay) "EEE" else "EEEE"
-        val day = SimpleDateFormat(dayPattern, locale).format(Date())
+        val day = SimpleDateFormat(if (shortDay) "EEE" else "EEEE", locale).format(Date())
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
         val icon = Icon.createWithBitmap(
-            createTextIcon(
-                context,
-                day = day,
-                date = date,
-                month = month,
-                mode = mode,
-                sizeSp = prefs.getFloat("text_size", 20f)
-            )
+            createTextIcon(context, day, date, month, mode, prefs.getFloat("text_size", 20f))
         )
-
         val intent = PendingIntent.getActivity(
             context, 0, Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(when (mode) {
@@ -68,29 +56,22 @@ object DayNotificationManager {
             .setCategory(Notification.CATEGORY_STATUS)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .build()
-
         manager.notify(NOTIFICATION_ID, notification)
         scheduleNextDay(context)
     }
 
     fun cancel(context: Context) {
-        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-            .cancel(NOTIFICATION_ID)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(NOTIFICATION_ID)
         cancelAlarm(context)
     }
 
     fun isEnabled(context: Context) =
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .getBoolean("enabled", false)
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("enabled", false)
 
     private fun ensureChannel(manager: NotificationManager) {
         if (Build.VERSION.SDK_INT >= 26) {
             manager.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ID,
-                    "Hari di status bar",
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
+                NotificationChannel(CHANNEL_ID, "Hari di status bar", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Menampilkan hari sebagai ikon teks di status bar."
                     setShowBadge(false)
                     setSound(null, null)
@@ -113,17 +94,10 @@ object DayNotificationManager {
         val requestedSp = sizeSp.coerceIn(12f, 22f)
         val multiLine = mode != "day"
 
-        // SystemUI normalizes notification icons into a fixed status-bar slot.
-        // Use the device status-bar height as the reference so a single-line
-        // day follows the visual scale of the system clock.
-        val statusBarHeightPx = context.resources.run {
-            val id = getIdentifier("status_bar_height", "dimen", "android")
-            if (id != 0) getDimensionPixelSize(id) else (24f * density).toInt()
-        }
-        val statusBarDp = statusBarHeightPx / density
-        val canvasHeightDp = if (multiLine) 48f else statusBarDp.coerceIn(24f, 36f)
-        val canvasHeight = (canvasHeightDp * density).toInt()
-
+        // SystemUI renders notification small icons in a fixed status-bar slot.
+        // A square 24dp bitmap prevents the single-line glyph from being shifted
+        // upward by a tall/non-square drawable.
+        val iconSize = (24f * density).toInt().coerceAtLeast(24)
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
             "day_date_month" -> listOf(day, "$date $month")
@@ -131,41 +105,49 @@ object DayNotificationManager {
             else -> listOf(day)
         }
 
-        val modeScale = when (mode) {
-            "day" -> 1.45f
-            "day_date_month", "date_month" -> 1.12f
-            else -> 1f
-        }
-        val desiredTextSize = requestedSp * scaledDensity * modeScale
+        val desiredTextSize = requestedSp * scaledDensity
         val maxTextSize = if (multiLine) {
-            ((canvasHeight - 2f * density) / lines.size)
-                .coerceAtMost(20f * scaledDensity)
+            (iconSize * 0.46f).coerceAtMost(14f * scaledDensity)
         } else {
-            canvasHeight * 0.84f
+            (iconSize * 0.70f).coerceAtMost(16f * scaledDensity)
         }
-        val textSize = desiredTextSize.coerceAtMost(maxTextSize).coerceAtLeast(1f)
+        var textSize = desiredTextSize.coerceAtMost(maxTextSize).coerceAtLeast(1f)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             color = android.graphics.Color.WHITE
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            this.textSize = textSize
+            typeface = FontManager.getTypeface(context)
             textAlign = Paint.Align.CENTER
+            this.textSize = textSize
         }
 
-        val metrics = paint.fontMetrics
-        val lineHeight = (metrics.descent - metrics.ascent).coerceAtLeast(1f)
-        val horizontalPadding = 2f * density
-        val width = (lines.maxOf { paint.measureText(it) } + horizontalPadding * 2)
-            .coerceAtLeast(20f * density).toInt()
+        if (!multiLine) {
+            // Fit long weekday names without shrinking the entire drawable.
+            val maxWidth = iconSize * 0.96f
+            val measured = paint.measureText(day)
+            if (measured > maxWidth && measured > 0f) {
+                textSize *= maxWidth / measured
+                paint.textSize = textSize
+            }
+        }
 
-        val bitmap = Bitmap.createBitmap(width, canvasHeight, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
+        val metrics = paint.fontMetrics
+        val lineHeight = metrics.descent - metrics.ascent
 
-        val totalTextHeight = lineHeight * lines.size
-        var baseline = (canvasHeight - totalTextHeight) / 2f - metrics.ascent
-        for (line in lines) {
-            canvas.drawText(line, width / 2f, baseline, paint)
-            baseline += lineHeight
+        if (!multiLine) {
+            // Center the font's actual metrics, so the glyph sits on the same
+            // vertical center line as the Android status-bar clock.
+            val baseline = iconSize / 2f - (metrics.ascent + metrics.descent) / 2f
+            canvas.drawText(day, iconSize / 2f, baseline, paint)
+        } else {
+            val gap = density
+            val total = lineHeight * lines.size + gap * (lines.size - 1)
+            var baseline = (iconSize - total) / 2f - metrics.ascent
+            for (line in lines) {
+                canvas.drawText(line, iconSize / 2f, baseline, paint)
+                baseline += lineHeight + gap
+            }
         }
         return bitmap
     }
@@ -185,13 +167,11 @@ object DayNotificationManager {
     }
 
     private fun cancelAlarm(context: Context) {
-        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
-            .cancel(pendingIntent(context))
+        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pendingIntent(context))
     }
 
     private fun pendingIntent(context: Context) = PendingIntent.getBroadcast(
-        context,
-        1602,
+        context, 1602,
         Intent(context, DayNotificationReceiver::class.java).setAction(ACTION_DAY_CHANGED),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
