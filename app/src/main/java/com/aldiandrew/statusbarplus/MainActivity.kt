@@ -512,10 +512,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun showDateFormatChooser() {
         val choices = arrayOf(
-            getString(R.string.pro_format_d),
+            getString(R.string.format_d),
             getString(R.string.format_dd),
-            getString(R.string.pro_format_d_mmm),
-            getString(R.string.pro_format_dd_mmm)
+            getString(R.string.format_d_mmm),
+            getString(R.string.format_dd_mmm)
         )
         val selected = when (prefs.getString("date_format", "d")) {
             "dd" -> 1
