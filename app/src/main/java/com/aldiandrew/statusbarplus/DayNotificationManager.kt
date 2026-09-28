@@ -30,10 +30,21 @@ object DayNotificationManager {
 
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
-        val pattern = if (prefs.getBoolean("short_day", true)) "EEE" else "EEEE"
-        val day = SimpleDateFormat(pattern, locale).format(Date())
+        val shortDay = prefs.getBoolean("short_day", true)
+        val mode = prefs.getString("display_mode", "day") ?: "day"
+        val dayPattern = if (shortDay) "EEE" else "EEEE"
+        val day = SimpleDateFormat(dayPattern, locale).format(Date())
+        val date = SimpleDateFormat("d", locale).format(Date())
+        val month = SimpleDateFormat("MMM", locale).format(Date())
         val icon = Icon.createWithBitmap(
-            createTextIcon(context, day, prefs.getFloat("text_size", 18f))
+            createTextIcon(
+                context,
+                day = day,
+                date = date,
+                month = month,
+                mode = mode,
+                sizeSp = prefs.getFloat("text_size", 18f)
+            )
         )
 
         val intent = PendingIntent.getActivity(
@@ -43,7 +54,12 @@ object DayNotificationManager {
 
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(icon)
-            .setContentTitle(day)
+            .setContentTitle(when (mode) {
+                "day_date" -> "$day $date"
+                "day_date_month" -> "$day $date $month"
+                "date_month" -> "$date $month"
+                else -> day
+            })
             .setContentText(context.getString(R.string.notification_description))
             .setContentIntent(intent)
             .setOngoing(true)
@@ -84,32 +100,51 @@ object DayNotificationManager {
         }
     }
 
-    private fun createTextIcon(context: Context, text: String, sizeSp: Float): Bitmap {
+    private fun createTextIcon(
+        context: Context,
+        day: String,
+        date: String,
+        month: String,
+        mode: String,
+        sizeSp: Float
+    ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
+        val textSize = sizeSp.coerceIn(12f, 22f) * scaledDensity
 
-        // Use the device's default Typeface so the status-bar text follows the
-        // system font selected by the user instead of bundling a separate font.
+        // Small notification icons are rendered by SystemUI into a fixed status-bar
+        // slot. The previous 48dp canvas caused SystemUI to scale the whole bitmap
+        // down, making the font-size slider appear ineffective.
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             color = android.graphics.Color.WHITE
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            textSize = (sizeSp.coerceIn(14f, 28f) * scaledDensity)
+            this.textSize = textSize
             textAlign = Paint.Align.CENTER
         }
 
-        // Render at a larger source size; SystemUI scales the notification icon
-        // down to its status-bar slot. This keeps short day names legible.
-        val width = (maxOf(paint.measureText(text) + 8f * density, 48f * density)).toInt()
-        val height = (48f * density).toInt()
+        val lines = when (mode) {
+            "day_date" -> listOf(day, date)
+            "day_date_month" -> listOf(day, "$date $month")
+            "date_month" -> listOf(date, month)
+            else -> listOf(day)
+        }
+
+        val lineHeight = (textSize * 1.05f).coerceAtLeast(1f)
+        val lineGap = if (lines.size > 1) 1.5f * density else 0f
+        val horizontalPadding = 1.5f * density
+        val width = lines.maxOf { paint.measureText(it) }.let {
+            (it + horizontalPadding * 2).coerceAtLeast(12f * density).toInt()
+        }
+        val height = (lineHeight * lines.size + lineGap + 2f * density).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val fm = paint.fontMetrics
-        canvas.drawText(
-            text,
-            width / 2f,
-            height / 2f - (fm.ascent + fm.descent) / 2f,
-            paint
-        )
+        val totalTextHeight = lineHeight * lines.size + lineGap
+        var baseline = (height - totalTextHeight) / 2f - paint.ascent
+
+        for (line in lines) {
+            canvas.drawText(line, width / 2f, baseline, paint)
+            baseline += lineHeight + lineGap
+        }
         return bitmap
     }
 
