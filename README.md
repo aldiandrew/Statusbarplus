@@ -113,3 +113,23 @@ Statusbarplus is intentionally built around public Android APIs and a small, foc
 The rendering pipeline is separated from the settings interface, allowing the notification presentation to remain predictable while keeping configuration simple and maintainable.
 
 The application does not require elevated privileges or system modification, making it suitable for standard, non-root Android installations.
+
+## Open-Source Credits
+
+Statusbarplus uses the following open-source projects:
+
+- **AndroidX Core KTX** — AndroidX library used for core Android/Kotlin extensions.
+  - Source: https://github.com/androidx/androidx
+  - License: Apache License 2.0
+- **AndroidX AppCompat** — AndroidX compatibility and UI support library.
+  - Source: https://github.com/androidx/androidx
+  - License: Apache License 2.0
+- **Material Components for Android** — Material Design components used for the application's Material 3 interface.
+  - Source: https://github.com/material-components/material-components-android
+  - License: Apache License 2.0
+- **Kotlin** — programming language and compiler used by the project.
+  - Source: https://github.com/JetBrains/kotlin
+  - License: Apache License 2.0
+
+Only open-source projects directly relevant to the application's implementation are credited here. Proprietary applications, services, or closed-source projects are not listed.
+
