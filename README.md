@@ -1,75 +1,69 @@
 # Statusbarplus
 
-Statusbarplus is an Android app that displays the current day and date directly in the status bar using Android's notification system. It is designed for modern Android devices and works without root, Xposed, Accessibility Service, overlays, or Shizuku.
+Statusbarplus is a lightweight Android app that shows calendar information in the status bar through a normal Android notification icon.
 
-## What it does
+The app is designed around a clean, expressive Material 3 interface inspired by the component and list patterns in Material_3_Expressive_List:
+https://github.com/NicosNicolaou16/Material_3_Expressive_List
 
-Statusbarplus lets you see calendar information without opening a clock or calendar app.
+## Features
 
-Available display modes:
-
-- **Day only** — one line.
-- **Day + date** — two lines.
-- **Day + date + month** — two lines.
-- **Date + month** — two lines.
-
-The weekday is always displayed in its short, locale-aware form. There is no long weekday-name setting.
-
-Additional features:
-
+- **Day only**
+- **Day + date**
+- **Date + month**
 - Adjustable status-bar text size.
-- Bold text rendering for better legibility in the small notification icon area.
-- Horizontal text fitting for long localized weekday and month names, preserving vertical text size whenever possible.
-- System font or an imported custom **TTF/OTF** font.
-- Light, dark, or system application theme.
-- Material 3-based application interface.
+- Horizontal and vertical text offset.
+- Padding and line-spacing controls.
+- System font or imported **TTF/OTF** font.
+- Light, dark, or system app theme.
 - Dynamic Material colors on supported Android versions.
-- Automatic refresh when the calendar date changes.
-- Persistent ongoing notification behavior so the status-bar item is not normally dismissible with a swipe.
-- Tapping the status-bar notification opens an Android calendar chooser when one or more calendar apps are installed.
-- Background/battery-optimization guidance for devices that aggressively stop background work.
-- Full calendar information remains available in the notification shade.
-- Notification permission is requested using Android's official permission mechanism.
-- Designed for low battery usage.
+- Large rounded surfaces and list-style settings inspired by Material 3 Expressive.
+- Automatic refresh at the next calendar day.
+- Persistent ongoing notification.
+- Battery-optimization guidance.
+- Android notification permission handling.
+- No root, Xposed, Accessibility Service, overlay, or Shizuku required.
 
-## How to use
+## What was removed
 
-1. Install **Statusbarplus**.
-2. Open the app.
-3. Turn on **Show day**.
-4. Allow notification permission when Android asks for it.
-5. Select the information to display under **Status bar content**.
-6. Adjust **Status bar text size**.
-7. Select **System font** or import your own **TTF/OTF** font.
-8. If your device frequently stops background apps, use the battery-optimization option provided by the app.
-9. Once enabled, the information appears as a persistent text-based notification icon in the status bar and refreshes when the date changes.
-10. Tap the notification to open the installed calendar app chooser.
+The interface intentionally no longer includes:
 
-## After restarting the device
+- **Day + date + month**
+- **Display presets**
+- **Text alignment selector**
+- **Custom date-format selector**
 
-Statusbarplus can receive the Android boot event and restore its scheduled date update when the device starts. If the status-bar information does not return after a restart, open the app once and verify that notification permission and background restrictions are not preventing the notification.
+Date and month use locale-aware Android formatting. The text is centered inside the notification bitmap; the app does not attempt to move the notification slot itself.
 
 ## How it works
 
-Statusbarplus uses an Android **notification small icon**. The day/date text is rendered into a bitmap and supplied as the notification icon. This allows the app to work without drawing directly over System UI.
+Statusbarplus renders the selected calendar information into a bitmap and supplies it as the notification's small icon.
 
-Android System UI still controls the final notification-icon slot, position, tinting, and scaling. An ongoing notification is used so users normally cannot dismiss the status-bar item with a swipe; Android System UI can still remove notifications in exceptional system conditions. Therefore, the exact physical size and position can vary between Android versions and device manufacturers. Long text is horizontally condensed before the app reduces its font size so that localized weekday names remain as readable as possible.
+This architecture is deliberately no-root and uses only public Android notification APIs. Android System UI still controls the final notification slot, its ordering, spacing relative to the built-in clock, tinting, and scaling. Therefore, controls in this app affect the text inside the notification icon, not the physical notification slot.
 
-## Material 3 interface
+## Interface design
 
-The application interface follows Material 3 theming principles and uses the device's Android Dynamic Color (Monet) palette on Android 12 and newer, including:
+The app uses Material 3 components with an expressive visual direction:
 
-- Light and dark color schemes.
-- System theme following.
-- Dynamic colors from the device wallpaper/system palette (Monet) on supported Android versions.
-- Theme-aware system-bar icon contrast.
-- Edge-to-edge layout with system-bar insets handled by the application.
+- Larger typography for primary sections.
+- Generous spacing and 28dp rounded surfaces.
+- Tonal surface containers and subtle outlines.
+- Grouped list-like settings rows.
+- Clear hierarchy between preview, controls, and secondary settings.
+- System/light/dark theme choices with dynamic colors where supported.
 
-Material 3 uses coordinated color, typography, and shape systems, while Android's current system-bar guidance recommends transparent/translucent bars and correctly contrasted system-bar icons.
+This is a View-based Android implementation, while the referenced project is a Jetpack Compose showcase. The repository is used as a design reference rather than copied code.
 
-## Privacy
+## Usage
 
-Statusbarplus does not require internet access for its core functionality. The displayed day and date are generated from the device's local time and locale.
+1. Install Statusbarplus.
+2. Open the app.
+3. Enable **Show in status bar**.
+4. Grant notification permission when Android requests it.
+5. Choose the status-bar content.
+6. Adjust text size or layout if needed.
+7. Choose the system font or import a TTF/OTF font.
+8. Optionally allow the battery-optimization exemption.
+9. Leave the notification enabled; the app refreshes it when the calendar date changes.
 
 ## Requirements
 
@@ -83,10 +77,21 @@ Statusbarplus does not require internet access for its core functionality. The d
 
 ## Build
 
-The project uses Gradle and GitHub Actions.
+GitHub Actions builds an optimized debug APK on pushes to main and on manual workflow runs. The APK is uploaded as a workflow artifact named **Statusbarplus**.
 
-Every push to the **main** branch runs a **debug build** and produces **app-debug.apk** as a workflow artifact. The debug build does not require the user to provide or manage a release signing keystore.
+The debug build uses the standard Android debug signing configuration, so no release keystore is required.
 
-## Notes
+## Project structure
 
-Statusbarplus focuses on providing lightweight calendar information in the status bar. The available notification-icon space and the final rendering of notification icons are controlled by Android System UI and may differ across devices and Android versions.
+- MainActivity.kt — Material 3 settings UI and preferences.
+- DayNotificationManager.kt — notification rendering and midnight scheduling.
+- DayNotificationReceiver.kt — boot/date-change restoration.
+- FontManager.kt — system/custom font handling.
+- .github/workflows/build.yml — automated build and APK verification.
+
+## Design reference
+
+Primary UI reference:
+https://github.com/NicosNicolaou16/Material_3_Expressive_List
+
+The project is used for visual and interaction inspiration only; Statusbarplus keeps its own implementation and architecture.
