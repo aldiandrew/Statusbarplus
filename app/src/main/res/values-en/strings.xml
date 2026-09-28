@@ -7,11 +7,10 @@
     <string name="show_day">Show day</string>
     <string name="notification_settings">Notification settings</string>
     <string name="background_title">Background operation</string>
-    <string name="background_body">Optionally allow Statusbarplus to bypass battery optimization so the daily notification and midnight update are less likely to be delayed by the system.</string>
+    <string name="background_body">Allow Statusbarplus to bypass battery optimization so the notification and midnight update are less likely to be delayed by the system.</string>
     <string name="background_allow">Allow background operation</string>
     <string name="background_allowed">Background operation allowed.</string>
     <string name="display_title">Day display</string>
-    <string name="short_day">Short day name</string>
     <string name="text_size">Status-bar text size: %1$d sp</string>
     <string name="display_mode_title">Status-bar content</string>
     <string name="mode_day">Day only</string>
@@ -26,12 +25,13 @@
     <string name="active">Active • using an Android status-bar notification.</string>
     <string name="inactive">Inactive.</string>
     <string name="notification_description">Current day</string>
+    <string name="choose_calendar">Choose calendar app</string>
     <string name="note">Text size adapts to the device status-bar area so it stays readable without clipping. This mode uses a normal Android notification.</string>
     <string name="guide_title">How to use Statusbarplus</string>
     <string name="guide_body">1. Turn on “Show day”.\n\n2. Choose the status-bar content: day, day + date, day + date + month, or date + month.\n\n3. Adjust the text size. It adapts to the device status-bar space so it remains readable without clipping.\n\n4. Choose the system font or import your own TTF/OTF font.\n\n5. If your device often stops background apps, allow the battery-optimization exemption. This is optional.</string>
     <string name="guide_continue">Continue</string>
     <string name="guide_later">Later</string>
-    <string name="font_title">Status bar font</string>
+    <string name="font_title">Status-bar font</string>
     <string name="font_body">Use the system font or import one TTF/OTF font of your choice.</string>
     <string name="font_system">System font</string>
     <string name="font_custom">My TTF/OTF font…</string>
