@@ -394,79 +394,38 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun fontLabel(): String {
-        return when (val key = prefs.getString("font_key", "system")) {
-            "custom" -> getString(R.string.font_custom)
-            "system", null -> getString(R.string.font_system)
-            else -> FontManager.builtInFonts.firstOrNull { it.key == key }?.label
-                ?: getString(R.string.font_system)
+    private fun fontLabel(): String =
+        if (prefs.getString("font_key", "system") == "custom") {
+            getString(R.string.font_custom)
+        } else {
+            getString(R.string.font_system)
         }
-    }
 
     private fun showFontChooser() {
-        val choices = mutableListOf(getString(R.string.font_system), getString(R.string.font_custom))
-        choices += FontManager.builtInFonts.map { font ->
-            if (FontManager.isDownloaded(this, font)) "✓ ${font.label}" else font.label
-        }
-
-        val current = prefs.getString("font_key", "system") ?: "system"
-        val selected = when {
-            current == "system" -> 0
-            current == "custom" -> 1
-            else -> 2 + FontManager.builtInFonts.indexOfFirst { it.key == current }.coerceAtLeast(0)
-        }
+        val choices = arrayOf(
+            getString(R.string.font_system),
+            getString(R.string.font_custom)
+        )
+        val selected = if (prefs.getString("font_key", "system") == "custom") 1 else 0
 
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(getString(R.string.font_title))
-            .setSingleChoiceItems(choices.toTypedArray(), selected) { dialog, which ->
-                when {
-                    which == 0 -> {
-                        prefs.edit().putString("font_key", "system").apply()
-                        fontButton.text = fontLabel()
-                        DayNotificationManager.show(this)
-                        updatePreview()
-                        dialog.dismiss()
-                    }
-                    which == 1 -> {
-                        dialog.dismiss()
-                        startActivityForResult(
-                            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "font/*"
-                            },
-                            300
-                        )
-                    }
-                    else -> {
-                        val font = FontManager.builtInFonts[which - 2]
-                        if (FontManager.isDownloaded(this, font)) {
-                            prefs.edit().putString("font_key", font.key).apply()
-                            fontButton.text = fontLabel()
-                            DayNotificationManager.show(this)
-                            updatePreview()
-                            dialog.dismiss()
-                        } else {
-                            fontButton.isEnabled = false
-                            FontManager.download(this, font) { success ->
-                                runOnUiThread {
-                                    fontButton.isEnabled = true
-                                    if (success) {
-                                        prefs.edit().putString("font_key", font.key).apply()
-                                        fontButton.text = fontLabel()
-                                        DayNotificationManager.show(this)
-                                        updatePreview()
-                                        dialog.dismiss()
-                                    } else {
-                                        android.widget.Toast.makeText(
-                                            this,
-                                            getString(R.string.font_download_failed),
-                                            android.widget.Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            }
-                        }
-                    }
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                if (which == 0) {
+                    prefs.edit().putString("font_key", "system").apply()
+                    fontButton.text = fontLabel()
+                    DayNotificationManager.show(this)
+                    updatePreview()
+                    dialog.dismiss()
+                } else {
+                    dialog.dismiss()
+                    startActivityForResult(
+                        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "font/*"
+                        },
+                        300
+                    )
                 }
             }
             .setNegativeButton(getString(R.string.guide_later), null)
