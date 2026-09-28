@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var displayModeButton: MaterialButton
     private lateinit var backgroundButton: MaterialButton
     private lateinit var fontButton: MaterialButton
+    private lateinit var textModeButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyThemeMode()
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         if (::daySwitch.isInitialized) {
             updateState()
             updateBackgroundState()
+            updateTextModeState()
         }
     }
 
@@ -194,6 +196,20 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
+                    addView(text(getString(R.string.text_mode_title), 17f, true), lp())
+                    addView(text(getString(R.string.text_mode_body), 13f, false), lp(3))
+                    textModeButton = MaterialButton(this@MainActivity).apply {
+                        setOnClickListener { openAccessibilitySettings() }
+                    }
+                    addView(textModeButton, lp(8))
+                })
+            },
+            lp(10)
+        )
+
+        content.addView(
+            card().apply {
+                addView(box().apply {
                     addView(text(getString(R.string.background_title), 17f, true), lp())
                     addView(text(getString(R.string.background_body), 13f, false), lp(3))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
@@ -222,6 +238,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(root)
         updateState()
         updateBackgroundState()
+        updateTextModeState()
     }
 
     private fun setEnabled(enabled: Boolean) {
@@ -300,6 +317,22 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
         val pm = getSystemService(PowerManager::class.java)
         return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    private fun isTextModeEnabled(): Boolean =
+        StatusBarTextAccessibilityService.isEnabled(this)
+
+    private fun updateTextModeState() {
+        if (!::textModeButton.isInitialized) return
+        textModeButton.text = if (isTextModeEnabled()) {
+            getString(R.string.text_mode_enabled)
+        } else {
+            getString(R.string.text_mode_enable)
+        }
+    }
+
+    private fun openAccessibilitySettings() {
+        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
     }
 
     private fun updateBackgroundState() {
