@@ -133,12 +133,12 @@ object DayNotificationManager {
         }
         val maxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            textSize = if (lines.size > 1) 18f * scaledDensity else maxTextSize
+            this.textSize = if (lines.size > 1) 18f * scaledDensity else maxTextSize
             textAlign = Paint.Align.CENTER
         }
 
         val lineHeight = (textSize * 1.05f).coerceAtLeast(1f)
-                val lineGap = if (lines.size > 1) 1.5f * density else 0f
+        val lineGap = if (lines.size > 1) 1.5f * density else 0f
         val horizontalPadding = 2f * density
         val width = (lines.maxOf { maxPaint.measureText(it) } + horizontalPadding * 2)
             .coerceAtLeast(20f * density).toInt()
