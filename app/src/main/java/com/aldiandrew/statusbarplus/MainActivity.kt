@@ -355,21 +355,6 @@ class MainActivity : AppCompatActivity() {
         else -> getString(R.string.offset_value, value.toInt())
     }
 
-    private fun listRow(title: String, subtitle: String): LinearLayout =
-        LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16f), dp(14f), dp(10f), dp(10f))
-            addView(
-                LinearLayout(this@MainActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    addView(text(title, 17f, true), lp())
-                    addView(text(subtitle, 13f, false), lp(2))
-                },
-                LinearLayout.LayoutParams(0, -2, 1f)
-            )
-        }
-
     private fun setEnabled(enabled: Boolean) {
         if (enabled && !hasNotificationPermission()) {
             requestNotificationPermissionIfNeeded()
