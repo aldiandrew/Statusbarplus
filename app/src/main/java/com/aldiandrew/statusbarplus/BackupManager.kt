@@ -76,7 +76,7 @@ object BackupManager {
         val target = java.io.File(context.filesDir, "fonts/custom-font")
         if (fontBytes != null) {
             target.parentFile?.mkdirs()
-            target.outputStream().use { it.write(fontBytes) }
+            target.outputStream().use { it.write(fontBytes!!) }
             val valid = runCatching {
                 android.graphics.Typeface.createFromFile(target)
             }.isSuccess
