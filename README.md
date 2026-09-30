@@ -19,16 +19,16 @@ Built with a clean Material 3 interface and designed around Android's native not
 - Material 3 switches, buttons, sliders, cards, and dialogs.
 - Locale-aware day, date, and month formatting.
 - Automatic refresh when the calendar date changes.
-- Persistent notification for reliable status-bar display.
-- Notification permission handling.
+- Persistent overlay service for reliable status-bar display.
+- Overlay permission handling.
 - Battery-optimization guidance.
 - No root or system modification required.
 
 ## How It Works
 
-Statusbarplus renders the selected calendar information as the small icon of an Android notification.
+Statusbarplus renders the selected calendar information in a transparent status-bar overlay.
 
-The application controls the content rendered inside that icon, including its typography, size, font, padding, and internal positioning. Android System UI remains responsible for the notification area itself.
+The application controls the overlay typography, size, font, padding, and positioning. The calendar display is not a regular notification, so it does not create a calendar card in the notification drawer.
 
 This approach keeps the application lightweight and compatible with standard Android APIs without requiring root access, system overlays, Accessibility Service, Xposed, or Shizuku.
 
@@ -89,7 +89,7 @@ For devices with aggressive background restrictions, the app also provides batte
 - No root required.
 - No Xposed required.
 - No Accessibility Service required.
-- No overlay required.
+- Requires the standard Android “display over other apps” permission.
 - No Shizuku required.
 
 ## Build
@@ -101,8 +101,9 @@ Each build verifies the generated APK before publishing it as a workflow artifac
 ## Project Structure
 
 - `MainActivity.kt` — Material 3 settings interface and application preferences.
-- `DayNotificationManager.kt` — status-bar notification rendering and refresh scheduling.
+- `DayNotificationManager.kt` — overlay lifecycle and refresh scheduling.
 - `DayNotificationReceiver.kt` — restoration after system events and date changes.
+- `StatusBarOverlayService.kt` — persistent status-bar overlay rendering.
 - `FontManager.kt` — system and custom font handling.
 - `.github/workflows/build.yml` — automated Android build and APK verification.
 
@@ -110,7 +111,7 @@ Each build verifies the generated APK before publishing it as a workflow artifac
 
 Statusbarplus is intentionally built around public Android APIs and a small, focused application architecture.
 
-The rendering pipeline is separated from the settings interface, allowing the notification presentation to remain predictable while keeping configuration simple and maintainable.
+The rendering pipeline is separated from the settings interface, allowing the overlay presentation to remain predictable while keeping configuration simple and maintainable.
 
 The application does not require elevated privileges or system modification, making it suitable for standard, non-root Android installations.
 
