@@ -6,7 +6,7 @@
     <string name="hero_body">Menampilkan hari, tanggal, atau tanggal + bulan langsung di area status bar. Tidak lagi membuat kartu kalender di notification shade.</string>
     <string name="show_day">Tampilkan di status bar</string>
     <string name="show_day_body">Aktifkan atau matikan informasi kalender di status bar menggunakan overlay sistem.</string>
-    <string name="notification_settings">Pengaturan notifikasi aplikasi</string>
+    <string name="notification_settings">Pengaturan overlay</string>
     <string name="background_title">Berjalan di latar belakang</string>
     <string name="background_body">Izinkan Statusbarplus melewati optimasi baterai agar overlay dan pembaruan tengah malam tidak mudah dihentikan atau ditunda sistem.</string>
     <string name="background_allow">Izinkan penggunaan latar belakang</string>
