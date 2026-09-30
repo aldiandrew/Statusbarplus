@@ -51,13 +51,15 @@ class MainActivity : AppCompatActivity() {
         migrateLegacyPreferences()
         configureSystemBars()
         buildUi()
-        requestNotificationPermissionIfNeeded()
         showFirstUseGuideIfNeeded()
     }
 
     override fun onResume() {
         super.onResume()
         if (::daySwitch.isInitialized) {
+            if (prefs.getBoolean("enabled", false) && Settings.canDrawOverlays(this)) {
+                DayNotificationManager.show(this)
+            }
             updateState()
             updateBackgroundState()
             updatePreview()
@@ -356,9 +358,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setEnabled(enabled: Boolean) {
-        if (enabled && !hasNotificationPermission()) {
-            requestNotificationPermissionIfNeeded()
-            window.decorView.postDelayed({ updateState() }, 700)
+        if (enabled && !Settings.canDrawOverlays(this)) {
+            prefs.edit().putBoolean("enabled", true).apply()
+            Toast.makeText(this, getString(R.string.overlay_permission_needed), Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            updateState()
             return
         }
         prefs.edit().putBoolean("enabled", enabled).apply()
@@ -372,7 +376,7 @@ class MainActivity : AppCompatActivity() {
         daySwitch.isChecked = enabled
         daySwitch.setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
         status.text = when {
-            !hasNotificationPermission() -> getString(R.string.permission_needed)
+            enabled && !Settings.canDrawOverlays(this) -> getString(R.string.overlay_permission_needed)
             enabled -> getString(R.string.active)
             else -> getString(R.string.inactive)
         }
@@ -404,24 +408,16 @@ class MainActivity : AppCompatActivity() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(getString(R.string.guide_title))
             .setMessage(getString(R.string.guide_body))
-            .setPositiveButton(getString(R.string.guide_continue)) { _, _ ->
-                if (!hasNotificationPermission()) requestNotificationPermissionIfNeeded()
-            }
+            .setPositiveButton(getString(R.string.guide_continue), null)
             .setNegativeButton(getString(R.string.guide_later), null)
             .show()
     }
 
     private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
-        }
+        // The calendar display no longer uses a regular notification.
     }
 
-    private fun hasNotificationPermission(): Boolean =
-        Build.VERSION.SDK_INT < 33 ||
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    private fun hasNotificationPermission(): Boolean = true
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
