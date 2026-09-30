@@ -39,10 +39,17 @@ object DayNotificationManager {
         }
         val date = SimpleDateFormat(datePattern, locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
-        val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
+        val sizeSp = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
+        val horizontalOffset = prefs.getInt("horizontal_offset", 0)
+        val verticalOffset = prefs.getInt("vertical_offset", 0)
+        val padding = prefs.getInt("layout_padding", 0).coerceIn(0, 12)
+        val lineSpacing = prefs.getInt("line_spacing", 0).coerceIn(-4, 12)
 
         val icon = Icon.createWithBitmap(
-            createTextIcon(context, day, date, month, mode, sizeSp)
+            createTextIcon(
+                context, day, date, month, mode, sizeSp,
+                horizontalOffset, verticalOffset, padding, lineSpacing
+            )
         )
 
         val title = when (mode) {
@@ -100,7 +107,11 @@ object DayNotificationManager {
         date: String,
         month: String,
         mode: String,
-        sizeSp: Float
+        sizeSp: Float,
+        horizontalOffset: Int,
+        verticalOffset: Int,
+        padding: Int,
+        lineSpacing: Int
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
@@ -121,7 +132,7 @@ object DayNotificationManager {
             textSize = requestedSp * scaledDensity
         }
 
-        val maxWidth = canvasSize * 0.94f
+        val maxWidth = (canvasSize - (padding * 2 * density)).coerceAtLeast(canvasSize * 0.45f)
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
 
         if (widestLine > maxWidth && widestLine > 0f) {
@@ -143,14 +154,15 @@ object DayNotificationManager {
         val metrics = paint.fontMetrics
 
         if (lines.size == 1) {
-            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
-            canvas.drawText(lines[0], canvasSize / 2f, baseline, paint)
+            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f + verticalOffset * density
+            canvas.drawText(lines[0], canvasSize / 2f + horizontalOffset * density, baseline, paint)
         } else {
-            val lineHeight = metrics.descent - metrics.ascent
+            val lineHeight = (metrics.descent - metrics.ascent + lineSpacing * density).coerceAtLeast(1f)
             val totalHeight = lineHeight * 2f
-            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
-            canvas.drawText(lines[0], canvasSize / 2f, firstBaseline, paint)
-            canvas.drawText(lines[1], canvasSize / 2f, firstBaseline + lineHeight, paint)
+            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent + verticalOffset * density
+            val centerX = canvasSize / 2f + horizontalOffset * density
+            canvas.drawText(lines[0], centerX, firstBaseline, paint)
+            canvas.drawText(lines[1], centerX, firstBaseline + lineHeight, paint)
         }
 
         return bitmap
