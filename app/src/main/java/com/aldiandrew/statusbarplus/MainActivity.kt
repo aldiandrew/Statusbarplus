@@ -199,6 +199,98 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
+                    addView(text(getString(R.string.layout_title), 17f, true), lp())
+                    addView(text(getString(R.string.layout_body), 13f, false), lp(3))
+
+                    addView(text(getString(R.string.horizontal_offset), 13f, true), lp(8))
+                    val horizontalLabel = text("", 12f, false)
+                    addView(horizontalLabel, lp(2))
+                    addView(Slider(this@MainActivity).apply {
+                        valueFrom = -12f
+                        valueTo = 12f
+                        stepSize = 1f
+                        value = prefs.getInt("horizontal_offset", 0).toFloat()
+                        horizontalLabel.text = getString(R.string.offset_value, value.toInt())
+                        addOnChangeListener { _, value, _ ->
+                            prefs.edit().putInt("horizontal_offset", value.toInt()).apply()
+                            horizontalLabel.text = getString(R.string.offset_value, value.toInt())
+                            DayNotificationManager.show(this@MainActivity)
+                            updatePreview()
+                        }
+                    }, lp())
+
+                    addView(text(getString(R.string.vertical_offset), 13f, true), lp(6))
+                    val verticalLabel = text("", 12f, false)
+                    addView(verticalLabel, lp(2))
+                    addView(Slider(this@MainActivity).apply {
+                        valueFrom = -12f
+                        valueTo = 12f
+                        stepSize = 1f
+                        value = prefs.getInt("vertical_offset", 0).toFloat()
+                        verticalLabel.text = getString(R.string.offset_value, value.toInt())
+                        addOnChangeListener { _, value, _ ->
+                            prefs.edit().putInt("vertical_offset", value.toInt()).apply()
+                            verticalLabel.text = getString(R.string.offset_value, value.toInt())
+                            DayNotificationManager.show(this@MainActivity)
+                            updatePreview()
+                        }
+                    }, lp())
+
+                    addView(text(getString(R.string.layout_padding), 13f, true), lp(6))
+                    val paddingLabel = text("", 12f, false)
+                    addView(paddingLabel, lp(2))
+                    addView(Slider(this@MainActivity).apply {
+                        valueFrom = 0f
+                        valueTo = 12f
+                        stepSize = 1f
+                        value = prefs.getInt("layout_padding", 0).toFloat()
+                        paddingLabel.text = getString(R.string.padding_value, value.toInt())
+                        addOnChangeListener { _, value, _ ->
+                            prefs.edit().putInt("layout_padding", value.toInt()).apply()
+                            paddingLabel.text = getString(R.string.padding_value, value.toInt())
+                            DayNotificationManager.show(this@MainActivity)
+                            updatePreview()
+                        }
+                    }, lp())
+
+                    addView(text(getString(R.string.line_spacing), 13f, true), lp(6))
+                    val spacingLabel = text("", 12f, false)
+                    addView(spacingLabel, lp(2))
+                    addView(Slider(this@MainActivity).apply {
+                        valueFrom = -4f
+                        valueTo = 12f
+                        stepSize = 1f
+                        value = prefs.getInt("line_spacing", 0).toFloat()
+                        spacingLabel.text = getString(R.string.spacing_value, value.toInt())
+                        addOnChangeListener { _, value, _ ->
+                            prefs.edit().putInt("line_spacing", value.toInt()).apply()
+                            spacingLabel.text = getString(R.string.spacing_value, value.toInt())
+                            DayNotificationManager.show(this@MainActivity)
+                            updatePreview()
+                        }
+                    }, lp())
+
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = getString(R.string.reset_layout)
+                        setOnClickListener {
+                            prefs.edit()
+                                .putInt("horizontal_offset", 0)
+                                .putInt("vertical_offset", 0)
+                                .putInt("layout_padding", 0)
+                                .putInt("line_spacing", 0)
+                                .apply()
+                            DayNotificationManager.show(this@MainActivity)
+                            recreate()
+                        }
+                    }, lp(6))
+                })
+            },
+            lp(10)
+        )
+
+        content.addView(
+            card().apply {
+                addView(box().apply {
                     addView(text(getString(R.string.background_title), 17f, true), lp())
                     addView(text(getString(R.string.background_body), 13f, false), lp(3))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
