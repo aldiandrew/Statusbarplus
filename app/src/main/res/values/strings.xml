@@ -3,12 +3,12 @@
     <string name="app_name">Statusbarplus</string>
     <string name="subtitle">Tanggal di status bar</string>
     <string name="hero_title">Tanggal, dengan gaya yang sederhana</string>
-    <string name="hero_body">Menampilkan hari, tanggal, atau tanggal + bulan sebagai ikon notifikasi di status bar. Dibuat ringan dan tetap tanpa root, Xposed, Accessibility, overlay, atau Shizuku.</string>
+    <string name="hero_body">Menampilkan hari, tanggal, atau tanggal + bulan langsung di area status bar. Tidak lagi membuat kartu kalender di notification shade.</string>
     <string name="show_day">Tampilkan di status bar</string>
-    <string name="show_day_body">Aktifkan atau matikan informasi kalender di status bar.</string>
-    <string name="notification_settings">Pengaturan notifikasi</string>
+    <string name="show_day_body">Aktifkan atau matikan informasi kalender di status bar menggunakan overlay sistem.</string>
+    <string name="notification_settings">Pengaturan notifikasi aplikasi</string>
     <string name="background_title">Berjalan di latar belakang</string>
-    <string name="background_body">Izinkan Statusbarplus melewati optimasi baterai agar notifikasi dan pembaruan tengah malam tidak mudah dihentikan atau ditunda sistem.</string>
+    <string name="background_body">Izinkan Statusbarplus melewati optimasi baterai agar overlay dan pembaruan tengah malam tidak mudah dihentikan atau ditunda sistem.</string>
     <string name="background_allow">Izinkan penggunaan latar belakang</string>
     <string name="background_allowed">Penggunaan latar belakang diizinkan</string>
     <string name="display_title">Konten status bar</string>
@@ -23,13 +23,13 @@
     <string name="theme_system">Sistem</string>
     <string name="theme_light">Terang</string>
     <string name="theme_dark">Gelap</string>
-    <string name="permission_needed">Izin notifikasi diperlukan.</string>
-    <string name="active">Aktif • menggunakan notifikasi status bar Android</string>
+    <string name="permission_needed">Izin overlay diperlukan untuk menampilkan tanggal di status bar.</string>
+    <string name="active">Aktif • menggunakan overlay status bar</string>
     <string name="inactive">Tidak aktif</string>
-    <string name="notification_description">Informasi kalender saat ini</string>
-    <string name="note">Statusbarplus menggunakan ikon notifikasi Android biasa. Posisi slot notifikasi, jarak terhadap jam, tint, dan skala akhir tetap dikendalikan System UI.</string>
+    <string name="notification_description">Layanan overlay status bar aktif</string>
+    <string name="note">Statusbarplus menggunakan overlay transparan yang tidak menjadi notifikasi kalender. Berikan izin “Tampil di atas aplikasi lain” agar tanggal dapat ditempatkan di status bar.</string>
     <string name="guide_title">Cara menggunakan Statusbarplus</string>
-    <string name="guide_body">1. Aktifkan “Tampilkan di status bar”.\n\n2. Pilih hari, hari + tanggal, atau tanggal + bulan.\n\n3. Atur ukuran teks dan tata letak jika diperlukan.\n\n4. Pilih font sistem atau impor font TTF/OTF sendiri.\n\n5. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
+    <string name="guide_body">1. Aktifkan “Tampilkan di status bar”.\n\n2. Pilih hari, hari + tanggal, atau tanggal + bulan.\n\n3. Atur ukuran teks dan tata letak jika diperlukan.\n\n4. Berikan izin “Tampil di atas aplikasi lain” saat diminta.\n\n5. Pilih font sistem atau impor font TTF/OTF sendiri.\n\n6. Jika perangkat sering menghentikan aplikasi di latar belakang, berikan pengecualian optimasi baterai. Ini opsional.</string>
     <string name="guide_continue">Lanjutkan</string>
     <string name="guide_later">Nanti</string>
     <string name="font_title">Font status bar</string>
@@ -38,7 +38,7 @@
     <string name="font_custom">Font TTF/OTF saya…</string>
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
     <string name="layout_title">Tata letak teks</string>
-    <string name="layout_body">Sesuaikan offset, padding, dan jarak antarbaris di dalam ikon notifikasi. Posisi slot terhadap jam tidak dapat dikendalikan aplikasi.</string>
+    <string name="layout_body">Sesuaikan offset, padding, dan jarak antarbaris pada overlay status bar.</string>
     <string name="horizontal_offset">Offset horizontal</string>
     <string name="vertical_offset">Offset vertikal</string>
     <string name="layout_padding">Padding</string>
@@ -58,4 +58,9 @@
     <string name="backup_create_failed">Backup gagal disimpan.</string>
     <string name="backup_restore_success">Backup berhasil dipulihkan.</string>
     <string name="backup_restore_failed">File backup tidak valid atau gagal dibaca.</string>
+
 </resources>
+    <string name="overlay_permission_needed">Izin “Tampil di atas aplikasi lain” diperlukan.</string>
+    <string name="overlay_service_channel">Statusbar overlay</string>
+    <string name="overlay_service_channel_description">Layanan latar depan untuk menjaga tanggal tetap tampil di status bar.</string>
+    <string name="overlay_service_notification">Menjaga overlay status bar tetap aktif.</string>
