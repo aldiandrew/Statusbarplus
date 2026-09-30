@@ -30,37 +30,35 @@ object DayNotificationManager {
 
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
-        val mode = "date_month"
-        val day = SimpleDateFormat("EEE", locale).format(Date())
-        val datePattern = if (BuildConfig.IS_PRO) {
-            prefs.getString("pro_date_format", "d") ?: "d"
-        } else {
-            "d"
-        }
-        val date = SimpleDateFormat(datePattern, locale).format(Date())
-        val month = SimpleDateFormat("MMM", locale).format(Date())
-        val sizeSp = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
-        val horizontalOffset = prefs.getInt("horizontal_offset", 0)
-        val verticalOffset = prefs.getInt("vertical_offset", 0)
-        val padding = prefs.getInt("layout_padding", 0).coerceIn(0, 12)
-        val lineSpacing = prefs.getInt("line_spacing", 0).coerceIn(-4, 12)
+        val mode = prefs.getString("display_mode", "day") ?: "day"
+        val now = Date()
+        val day = SimpleDateFormat("EEE", locale).format(now)
+        val date = SimpleDateFormat("d", locale).format(now)
+        val month = SimpleDateFormat("MMM", locale).format(now)
+        val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
 
         val icon = Icon.createWithBitmap(
-            createTextIcon(
-                context, day, date, month, mode, sizeSp,
-                horizontalOffset, verticalOffset, padding, lineSpacing
-            )
+            createTextIcon(context, day, date, month, mode, sizeSp, prefs)
         )
 
         val title = when (mode) {
             "day_date" -> "$day $date"
-            "day_date_month" -> "$day $date $month"
             "date_month" -> "$date $month"
             else -> day
         }
 
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            1603,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(icon)
+            .setContentIntent(contentIntent)
             .setContentTitle(title)
             .setContentText(context.getString(R.string.notification_description))
             .setOngoing(true)
@@ -76,7 +74,8 @@ object DayNotificationManager {
     }
 
     fun cancel(context: Context) {
-        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(NOTIFICATION_ID)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .cancel(NOTIFICATION_ID)
         cancelAlarm(context)
     }
 
@@ -92,7 +91,7 @@ object DayNotificationManager {
                     "Hari di status bar",
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Menampilkan hari sebagai ikon teks di status bar."
+                    description = "Menampilkan informasi kalender sebagai ikon teks di status bar."
                     setShowBadge(false)
                     setSound(null, null)
                     enableVibration(false)
@@ -108,19 +107,19 @@ object DayNotificationManager {
         month: String,
         mode: String,
         sizeSp: Float,
-        horizontalOffset: Int,
-        verticalOffset: Int,
-        padding: Int,
-        lineSpacing: Int
+        prefs: android.content.SharedPreferences
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         val scaledDensity = context.resources.displayMetrics.scaledDensity
         val canvasSize = (48f * density).toInt().coerceAtLeast(144)
         val requestedSp = sizeSp.coerceIn(12f, 22f)
+        val padding = prefs.getFloat("layout_padding", 4f).coerceIn(0f, 18f)
+        val horizontalOffset = prefs.getFloat("horizontal_offset", 0f).coerceIn(-12f, 12f) * density
+        val verticalOffset = prefs.getFloat("vertical_offset", 0f).coerceIn(-12f, 12f) * density
+        val lineSpacing = prefs.getFloat("line_spacing", 0f).coerceIn(-6f, 12f) * scaledDensity
 
         val lines = when (mode) {
             "day_date" -> listOf(day, date)
-            "day_date_month" -> listOf(day, "$date $month")
             "date_month" -> listOf(date, month)
             else -> listOf(day)
         }
@@ -132,9 +131,8 @@ object DayNotificationManager {
             textSize = requestedSp * scaledDensity
         }
 
-        val maxWidth = (canvasSize - (padding * 2 * density)).coerceAtLeast(canvasSize * 0.45f)
+        val maxWidth = canvasSize * (1f - (padding / 48f)).coerceIn(0.55f, 0.96f)
         val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
-
         if (widestLine > maxWidth && widestLine > 0f) {
             paint.textScaleX = (maxWidth / widestLine).coerceAtLeast(0.55f)
         }
@@ -145,24 +143,20 @@ object DayNotificationManager {
             paint.textScaleX = 1f
         }
 
-        val bitmap = Bitmap.createBitmap(
-            canvasSize,
-            canvasSize,
-            Bitmap.Config.ARGB_8888
-        )
+        val bitmap = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val metrics = paint.fontMetrics
+        val x = canvasSize / 2f + horizontalOffset
 
         if (lines.size == 1) {
-            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f + verticalOffset * density
-            canvas.drawText(lines[0], canvasSize / 2f + horizontalOffset * density, baseline, paint)
+            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f + verticalOffset
+            canvas.drawText(lines[0], x, baseline, paint)
         } else {
-            val lineHeight = (metrics.descent - metrics.ascent + lineSpacing * density).coerceAtLeast(1f)
+            val lineHeight = (metrics.descent - metrics.ascent) + lineSpacing
             val totalHeight = lineHeight * 2f
-            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent + verticalOffset * density
-            val centerX = canvasSize / 2f + horizontalOffset * density
-            canvas.drawText(lines[0], centerX, firstBaseline, paint)
-            canvas.drawText(lines[1], centerX, firstBaseline + lineHeight, paint)
+            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent + verticalOffset
+            canvas.drawText(lines[0], x, firstBaseline, paint)
+            canvas.drawText(lines[1], x, firstBaseline + lineHeight, paint)
         }
 
         return bitmap
