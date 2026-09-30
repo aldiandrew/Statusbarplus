@@ -169,9 +169,7 @@ class MainActivity : AppCompatActivity() {
                         MaterialButton(this@MainActivity).apply {
                             text = getString(R.string.notification_settings)
                             setOnClickListener {
-                                startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                                })
+                                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
                             }
                         },
                         lp(8)
