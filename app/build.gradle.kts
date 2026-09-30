@@ -13,6 +13,8 @@ android {
         targetSdk = 36
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 4
         versionName = "3.0"
+        // Public build: Pro-only formatting remains disabled unless a Pro build defines it.
+        buildConfigField("boolean", "IS_PRO", "false")
     }
 
     compileOptions {
