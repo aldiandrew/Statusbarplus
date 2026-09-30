@@ -30,7 +30,7 @@ object DayNotificationManager {
 
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val locale = Locale.getDefault()
-        val mode = prefs.getString("display_mode", "day") ?: "day"
+        val mode = "date_month"
         val day = SimpleDateFormat("EEE", locale).format(Date())
         val datePattern = if (BuildConfig.IS_PRO) {
             prefs.getString("pro_date_format", "d") ?: "d"
