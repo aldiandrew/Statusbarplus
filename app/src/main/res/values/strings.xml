@@ -58,15 +58,8 @@
     <string name="backup_create_failed">Backup gagal disimpan.</string>
     <string name="backup_restore_success">Backup berhasil dipulihkan.</string>
     <string name="backup_restore_failed">File backup tidak valid atau gagal dibaca.</string>
-
     <string name="overlay_permission_needed">Izin “Tampil di atas aplikasi lain” diperlukan.</string>
     <string name="overlay_service_channel">Statusbar overlay</string>
     <string name="overlay_service_channel_description">Layanan latar depan untuk menjaga tanggal tetap tampil di status bar.</string>
     <string name="overlay_service_notification">Menjaga overlay status bar tetap aktif.</string>
-</resources>
-    <string name="overlay_permission_needed">Izin “Tampil di atas aplikasi lain” diperlukan.</string>
-    <string name="overlay_service_channel">Statusbar overlay</string>
-    <string name="overlay_service_channel_description">Layanan latar depan untuk menjaga tanggal tetap tampil di status bar.</string>
-    <string name="overlay_service_notification">Menjaga overlay status bar tetap aktif.</string>
-
 </resources>
