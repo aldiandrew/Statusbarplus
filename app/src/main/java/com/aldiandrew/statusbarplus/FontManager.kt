@@ -18,6 +18,8 @@ object FontManager {
         }
     }
 
+    fun hasCustomFont(context: Context): Boolean = File(context.filesDir, CUSTOM_FILE).isFile
+
     fun importCustom(context: Context, source: android.net.Uri): Boolean {
         val dir = File(context.filesDir, "fonts").apply { mkdirs() }
         val target = File(dir, "custom-font")
