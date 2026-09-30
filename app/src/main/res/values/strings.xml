@@ -48,4 +48,29 @@
     <string name="font_custom">Font TTF/OTF saya…</string>
     
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
+    <string name="show_day_body">Aktifkan atau nonaktifkan informasi kalender di status bar.</string>
+    <string name="display_body">Pilih informasi yang ingin ditampilkan pada ikon status bar.</string>
+    <string name="mode_day_date_month">Hari + tanggal + bulan</string>
+    <string name="theme_body">Pilih tampilan sistem, terang, atau gelap.</string>
+    <string name="layout_title">Tata letak teks</string>
+    <string name="layout_body">Atur offset, padding, dan jarak baris di dalam ikon notifikasi.</string>
+    <string name="horizontal_offset">Offset horizontal</string>
+    <string name="vertical_offset">Offset vertikal</string>
+    <string name="layout_padding">Padding</string>
+    <string name="line_spacing">Jarak baris</string>
+    <string name="offset_value">%1$d dp</string>
+    <string name="padding_value">%1$d dp</string>
+    <string name="spacing_value">%1$d dp</string>
+    <string name="reset_layout">Atur ulang tata letak</string>
+    <string name="backup_title">Cadangkan &amp; pulihkan</string>
+    <string name="backup_body">Simpan pengaturan Statusbarplus ke satu file cadangan.</string>
+    <string name="backup_create">Buat cadangan</string>
+    <string name="backup_restore">Pulihkan cadangan</string>
+    <string name="backup_restore_confirm_title">Pulihkan pengaturan?</string>
+    <string name="backup_restore_confirm_body">Pengaturan Statusbarplus saat ini akan diganti dengan cadangan yang dipilih.</string>
+    <string name="backup_restore_confirm">Pulihkan</string>
+    <string name="backup_create_success">Cadangan berhasil disimpan.</string>
+    <string name="backup_create_failed">Cadangan tidak dapat disimpan.</string>
+    <string name="backup_restore_success">Cadangan berhasil dipulihkan.</string>
+    <string name="backup_restore_failed">File cadangan tidak valid atau tidak dapat dibaca.</string>
 </resources>
