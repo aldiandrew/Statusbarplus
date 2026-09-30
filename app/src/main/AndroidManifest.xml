@@ -6,6 +6,7 @@
 
     <application
         android:allowBackup="true"
+        android:icon="@drawable/ic_statusbarplus"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Statusbarplus">
@@ -27,6 +28,5 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-
     </application>
 </manifest>
