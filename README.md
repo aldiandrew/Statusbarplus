@@ -1,86 +1,75 @@
 # Statusbarplus
 
-Statusbarplus is a lightweight Android utility for displaying calendar information directly in the status bar.
+Statusbarplus is an Android app that displays the current day and date directly in the status bar using Android's notification system. It is designed for modern Android devices and works without root, Xposed, Accessibility Service, overlays, or Shizuku.
 
-Built with a clean Material 3 interface and designed around Android's native notification framework, the app provides a focused way to keep the current day, date, and month visible without modifying the system or requiring privileged access.
+## What it does
 
-## Features
+Statusbarplus lets you see calendar information without opening a clock or calendar app.
 
-- **Day** — display the current day of the week.
-- **Day + date** — display the day together with the current date.
-- **Date + month** — display the current date and month.
+Available display modes:
+
+- **Day only** — one line.
+- **Day + date** — two lines.
+- **Day + date + month** — two lines.
+- **Date + month** — two lines.
+
+The weekday is always displayed in its short, locale-aware form. There is no long weekday-name setting.
+
+Additional features:
+
 - Adjustable status-bar text size.
-- Horizontal and vertical text positioning controls.
-- Padding and line-spacing controls.
-- System font support.
-- Custom **TTF/OTF** font support.
-- Light, dark, or system theme.
+- Bold text rendering for better legibility in the small notification icon area.
+- Horizontal text fitting for long localized weekday and month names, preserving vertical text size whenever possible.
+- System font or an imported custom **TTF/OTF** font.
+- Light, dark, or system application theme.
+- Material 3-based application interface.
 - Dynamic Material colors on supported Android versions.
-- Material 3 switches, buttons, sliders, cards, and dialogs.
-- Locale-aware day, date, and month formatting.
 - Automatic refresh when the calendar date changes.
-- Persistent overlay service for reliable status-bar display.
-- Overlay permission handling.
-- Battery-optimization guidance.
-- No root or system modification required.
+- Persistent ongoing notification behavior so the status-bar item is not normally dismissible with a swipe.
+- Tapping the status-bar notification opens an Android calendar chooser when one or more calendar apps are installed.
+- Background/battery-optimization guidance for devices that aggressively stop background work.
+- Full calendar information remains available in the notification shade.
+- Notification permission is requested using Android's official permission mechanism.
+- Designed for low battery usage.
 
-## How It Works
+## How to use
 
-Statusbarplus renders the selected calendar information in a transparent status-bar overlay.
+1. Install **Statusbarplus**.
+2. Open the app.
+3. Turn on **Show day**.
+4. Allow notification permission when Android asks for it.
+5. Select the information to display under **Status bar content**.
+6. Adjust **Status bar text size**.
+7. Select **System font** or import your own **TTF/OTF** font.
+8. If your device frequently stops background apps, use the battery-optimization option provided by the app.
+9. Once enabled, the information appears as a persistent text-based notification icon in the status bar and refreshes when the date changes.
+10. Tap the notification to open the installed calendar app chooser.
 
-The application controls the overlay typography, size, font, padding, and positioning. The calendar display is not a regular notification, so it does not create a calendar card in the notification drawer.
+## After restarting the device
 
-This approach keeps the application lightweight and compatible with standard Android APIs without requiring root access, system overlays, Accessibility Service, Xposed, or Shizuku.
+Statusbarplus can receive the Android boot event and restore its scheduled date update when the device starts. If the status-bar information does not return after a restart, open the app once and verify that notification permission and background restrictions are not preventing the notification.
 
-## Using Statusbarplus
+## How it works
 
-### 1. Enable the status-bar display
+Statusbarplus uses an Android **notification small icon**. The day/date text is rendered into a bitmap and supplied as the notification icon. This allows the app to work without drawing directly over System UI.
 
-Open Statusbarplus and turn on **Show in status bar**.
+Android System UI still controls the final notification-icon slot, position, tinting, and scaling. An ongoing notification is used so users normally cannot dismiss the status-bar item with a swipe; Android System UI can still remove notifications in exceptional system conditions. Therefore, the exact physical size and position can vary between Android versions and device manufacturers. Long text is horizontally condensed before the app reduces its font size so that localized weekday names remain as readable as possible.
 
-Android may request notification permission the first time the feature is enabled. Grant the permission so the status-bar notification can be displayed.
+## Material 3 interface
 
-### 2. Choose the information to display
+The application interface follows Material 3 theming principles and uses the device's Android Dynamic Color (Monet) palette on Android 12 and newer, including:
 
-Select the format that best fits your status bar:
+- Light and dark color schemes.
+- System theme following.
+- Dynamic colors from the device wallpaper/system palette (Monet) on supported Android versions.
+- Theme-aware system-bar icon contrast.
+- Edge-to-edge layout with system-bar insets handled by the application.
 
-- **Day**
-- **Day + date**
-- **Date + month**
+Material 3 uses coordinated color, typography, and shape systems, while Android's current system-bar guidance recommends transparent/translucent bars and correctly contrasted system-bar icons.
 
-The displayed calendar information follows the device locale.
+## Privacy
 
-### 3. Adjust the appearance
-
-Use the available controls to refine the status-bar text:
-
-- **Text size** — change the rendered text size.
-- **Horizontal offset** — adjust the text position horizontally within the icon.
-- **Vertical offset** — adjust the text position vertically.
-- **Padding** — control the internal spacing around the rendered text.
-- **Line spacing** — control spacing when the selected layout uses multiple lines.
-
-### 4. Choose a font
-
-Statusbarplus can use the system font or a custom **TTF/OTF** font.
-
-When using a custom font, select the font file from the device and apply it to the status-bar text.
-
-### 5. Customize the app theme
-
-Choose between:
-
-- **System** — follow the device appearance.
-- **Light**
-- **Dark**
-
-Dynamic Material colors are used where supported by the Android version and device configuration.
-
-### 6. Keep the notification active
-
-Statusbarplus uses an ongoing notification to maintain the status-bar display. The notification is refreshed automatically when the calendar date changes.
-
-For devices with aggressive background restrictions, the app also provides battery-optimization guidance to help maintain reliable operation.
+Statusbarplus does not require internet access for its core functionality. The displayed day and date are generated from the device's local time and locale.
 
 ## Requirements
 
@@ -89,48 +78,15 @@ For devices with aggressive background restrictions, the app also provides batte
 - No root required.
 - No Xposed required.
 - No Accessibility Service required.
-- Requires the standard Android “display over other apps” permission.
+- No overlay required.
 - No Shizuku required.
 
 ## Build
 
-The project uses Gradle and Android Gradle Plugin tooling and is built automatically with GitHub Actions.
+The project uses Gradle and GitHub Actions.
 
-Each build verifies the generated APK before publishing it as a workflow artifact.
+Every push to the **main** branch runs a **debug build** and produces **app-debug.apk** as a workflow artifact. The debug build does not require the user to provide or manage a release signing keystore.
 
-## Project Structure
+## Notes
 
-- `MainActivity.kt` — Material 3 settings interface and application preferences.
-- `DayNotificationManager.kt` — overlay lifecycle and refresh scheduling.
-- `DayNotificationReceiver.kt` — restoration after system events and date changes.
-- `StatusBarOverlayService.kt` — persistent status-bar overlay rendering.
-- `FontManager.kt` — system and custom font handling.
-- `.github/workflows/build.yml` — automated Android build and APK verification.
-
-## Architecture
-
-Statusbarplus is intentionally built around public Android APIs and a small, focused application architecture.
-
-The rendering pipeline is separated from the settings interface, allowing the overlay presentation to remain predictable while keeping configuration simple and maintainable.
-
-The application does not require elevated privileges or system modification, making it suitable for standard, non-root Android installations.
-
-## Open-Source Credits
-
-Statusbarplus uses the following open-source projects:
-
-- **AndroidX Core KTX** — AndroidX library used for core Android/Kotlin extensions.
-  - Source: https://github.com/androidx/androidx
-  - License: Apache License 2.0
-- **AndroidX AppCompat** — AndroidX compatibility and UI support library.
-  - Source: https://github.com/androidx/androidx
-  - License: Apache License 2.0
-- **Material Components for Android** — Material Design components used for the application's Material 3 interface.
-  - Source: https://github.com/material-components/material-components-android
-  - License: Apache License 2.0
-- **Kotlin** — programming language and compiler used by the project.
-  - Source: https://github.com/JetBrains/kotlin
-  - License: Apache License 2.0
-
-Only open-source projects directly relevant to the application's implementation are credited here. Proprietary applications, services, or closed-source projects are not listed.
-
+Statusbarplus focuses on providing lightweight calendar information in the status bar. The available notification-icon space and the final rendering of notification icons are controlled by Android System UI and may differ across devices and Android versions.
