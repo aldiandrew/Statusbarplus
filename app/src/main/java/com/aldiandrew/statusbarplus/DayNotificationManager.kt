@@ -1,29 +1,160 @@
 package com.aldiandrew.statusbarplus
 
 import android.app.AlarmManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.provider.Settings
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.drawable.Icon
+import android.os.Build
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object DayNotificationManager {
+    private const val CHANNEL_ID = "day_status_bar"
+    private const val NOTIFICATION_ID = 1601
     private const val ACTION_DAY_CHANGED = "com.aldiandrew.statusbarplus.DAY_CHANGED"
 
     fun show(context: Context) {
         if (!isEnabled(context)) return
-        if (Settings.canDrawOverlays(context)) StatusBarOverlayService.start(context)
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        ensureChannel(manager)
+
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val locale = Locale.getDefault()
+        val mode = prefs.getString("display_mode", "day") ?: "day"
+        val day = SimpleDateFormat("EEE", locale).format(Date())
+        val datePattern = if (BuildConfig.IS_PRO) {
+            prefs.getString("pro_date_format", "d") ?: "d"
+        } else {
+            "d"
+        }
+        val date = SimpleDateFormat(datePattern, locale).format(Date())
+        val month = SimpleDateFormat("MMM", locale).format(Date())
+        val sizeSp = prefs.getFloat("text_size", 18f).coerceIn(12f, 22f)
+
+        val icon = Icon.createWithBitmap(
+            createTextIcon(context, day, date, month, mode, sizeSp)
+        )
+
+        val title = when (mode) {
+            "day_date" -> "$day $date"
+            "day_date_month" -> "$day $date $month"
+            "date_month" -> "$date $month"
+            else -> day
+        }
+
+        val notification = Notification.Builder(context, CHANNEL_ID)
+            .setSmallIcon(icon)
+            .setContentTitle(title)
+            .setContentText(context.getString(R.string.notification_description))
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(false)
+            .setShowWhen(false)
+            .setCategory(Notification.CATEGORY_STATUS)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .build()
+
+        manager.notify(NOTIFICATION_ID, notification)
         scheduleNextDay(context)
     }
 
     fun cancel(context: Context) {
-        StatusBarOverlayService.stop(context)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(NOTIFICATION_ID)
         cancelAlarm(context)
     }
 
     fun isEnabled(context: Context) =
         context.getSharedPreferences("settings", Context.MODE_PRIVATE)
             .getBoolean("enabled", false)
+
+    private fun ensureChannel(manager: NotificationManager) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_ID,
+                    "Hari di status bar",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Menampilkan hari sebagai ikon teks di status bar."
+                    setShowBadge(false)
+                    setSound(null, null)
+                    enableVibration(false)
+                }
+            )
+        }
+    }
+
+    private fun createTextIcon(
+        context: Context,
+        day: String,
+        date: String,
+        month: String,
+        mode: String,
+        sizeSp: Float
+    ): Bitmap {
+        val density = context.resources.displayMetrics.density
+        val scaledDensity = context.resources.displayMetrics.scaledDensity
+        val canvasSize = (48f * density).toInt().coerceAtLeast(144)
+        val requestedSp = sizeSp.coerceIn(12f, 22f)
+
+        val lines = when (mode) {
+            "day_date" -> listOf(day, date)
+            "day_date_month" -> listOf(day, "$date $month")
+            "date_month" -> listOf(date, month)
+            else -> listOf(day)
+        }
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            typeface = Typeface.create(FontManager.getTypeface(context), Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            textSize = requestedSp * scaledDensity
+        }
+
+        val maxWidth = canvasSize * 0.94f
+        val widestLine = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
+
+        if (widestLine > maxWidth && widestLine > 0f) {
+            paint.textScaleX = (maxWidth / widestLine).coerceAtLeast(0.55f)
+        }
+
+        val fittedWidth = lines.maxOfOrNull { paint.measureText(it) } ?: 0f
+        if (fittedWidth > maxWidth && fittedWidth > 0f) {
+            paint.textSize *= maxWidth / fittedWidth
+            paint.textScaleX = 1f
+        }
+
+        val bitmap = Bitmap.createBitmap(
+            canvasSize,
+            canvasSize,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        val metrics = paint.fontMetrics
+
+        if (lines.size == 1) {
+            val baseline = canvasSize / 2f - (metrics.ascent + metrics.descent) / 2f
+            canvas.drawText(lines[0], canvasSize / 2f, baseline, paint)
+        } else {
+            val lineHeight = metrics.descent - metrics.ascent
+            val totalHeight = lineHeight * 2f
+            val firstBaseline = canvasSize / 2f - totalHeight / 2f - metrics.ascent
+            canvas.drawText(lines[0], canvasSize / 2f, firstBaseline, paint)
+            canvas.drawText(lines[1], canvasSize / 2f, firstBaseline + lineHeight, paint)
+        }
+
+        return bitmap
+    }
 
     private fun scheduleNextDay(context: Context) {
         val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -40,8 +171,7 @@ object DayNotificationManager {
     }
 
     private fun cancelAlarm(context: Context) {
-        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
-            .cancel(pendingIntent(context))
+        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pendingIntent(context))
     }
 
     private fun pendingIntent(context: Context) = PendingIntent.getBroadcast(
