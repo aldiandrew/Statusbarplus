@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import org.json.JSONObject
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -35,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var preview: TextView
     private lateinit var sizeLabel: TextView
-    private lateinit var displayModeButton: MaterialButton
     private lateinit var backgroundButton: MaterialButton
     private lateinit var fontButton: MaterialButton
 
@@ -150,32 +150,22 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.display_title), 17f, true), lp())
-                    displayModeButton = MaterialButton(this@MainActivity).apply {
-                        text = displayModeLabel()
-                        setOnClickListener { showDisplayModeChooser() }
-                    }
-                    addView(displayModeButton, lp(4))
+                    addView(text(getString(R.string.display_body), 13f, false), lp(3))
                     sizeLabel = text("", 14f, true)
                     addView(sizeLabel, lp(8))
-                    addView(
-                        Slider(this@MainActivity).apply {
-                            valueFrom = 12f
-                            valueTo = 22f
-                            value = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
-                            stepSize = 1f
-                            addOnChangeListener { _, value, _ ->
-                                prefs.edit().putFloat("text_size", value).apply()
-                                sizeLabel.text = getString(R.string.text_size, value.toInt())
-                                DayNotificationManager.show(this@MainActivity)
-                                updatePreview()
-                            }
-                        },
-                        lp()
-                    )
-                    sizeLabel.text = getString(
-                        R.string.text_size,
-                        prefs.getFloat("text_size", 20f).coerceIn(12f, 22f).toInt()
-                    )
+                    addView(Slider(this@MainActivity).apply {
+                        valueFrom = 12f
+                        valueTo = 22f
+                        value = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
+                        stepSize = 1f
+                        addOnChangeListener { _, value, _ ->
+                            prefs.edit().putFloat("text_size", value).putString("display_mode", "date_month").apply()
+                            sizeLabel.text = getString(R.string.text_size, value.toInt())
+                            DayNotificationManager.show(this@MainActivity)
+                            updatePreview()
+                        }
+                    }, lp())
+                    sizeLabel.text = getString(R.string.text_size, prefs.getFloat("text_size", 20f).coerceIn(12f, 22f).toInt())
                 })
             },
             lp(10)
@@ -321,6 +311,24 @@ class MainActivity : AppCompatActivity() {
         content.addView(
             card().apply {
                 addView(box().apply {
+                    addView(text(getString(R.string.backup_title), 17f, true), lp())
+                    addView(text(getString(R.string.backup_body), 13f, false), lp(3))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = getString(R.string.backup_create)
+                        setOnClickListener { createBackup() }
+                    }, lp(8))
+                    addView(MaterialButton(this@MainActivity).apply {
+                        text = getString(R.string.backup_restore)
+                        setOnClickListener { chooseBackup() }
+                    }, lp(2))
+                })
+            },
+            lp(10)
+        )
+
+        content.addView(
+            card().apply {
+                addView(box().apply {
                     addView(text(getString(R.string.theme_title), 17f, true), lp())
                     addView(MaterialButton(this@MainActivity).apply {
                         text = themeLabel()
@@ -363,15 +371,9 @@ class MainActivity : AppCompatActivity() {
     private fun updatePreview() {
         if (!::preview.isInitialized) return
         val locale = Locale.getDefault()
-        val day = SimpleDateFormat("EEE", locale).format(Date())
         val date = SimpleDateFormat("d", locale).format(Date())
         val month = SimpleDateFormat("MMM", locale).format(Date())
-        preview.text = when (prefs.getString("display_mode", "day")) {
-            "day_date" -> "$day\n$date"
-            "day_date_month" -> "$day\n$date $month"
-            "date_month" -> "$date\n$month"
-            else -> day
-        }
+        preview.text = "$date\n$month"
         preview.typeface = android.graphics.Typeface.create(FontManager.getTypeface(this), android.graphics.Typeface.BOLD)
         preview.textSize = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
     }
@@ -468,42 +470,59 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun displayModeLabel(): String = when (prefs.getString("display_mode", "day")) {
-        "day_date" -> getString(R.string.mode_day_date)
-        "day_date_month" -> getString(R.string.mode_day_date_month)
-        "date_month" -> getString(R.string.mode_date_month)
-        else -> getString(R.string.mode_day)
+    private var pendingBackupJson: String? = null
+
+    private fun createBackup() {
+        pendingBackupJson = JSONObject().apply {
+            put("version", 1)
+            put("enabled", prefs.getBoolean("enabled", false))
+            put("text_size", prefs.getFloat("text_size", 20f).toDouble())
+            put("short_day", prefs.getBoolean("short_day", true))
+            put("font_key", prefs.getString("font_key", "system"))
+            put("horizontal_offset", prefs.getInt("horizontal_offset", 0))
+            put("vertical_offset", prefs.getInt("vertical_offset", 0))
+            put("layout_padding", prefs.getInt("layout_padding", 0))
+            put("line_spacing", prefs.getInt("line_spacing", 0))
+            put("theme_mode", prefs.getString("theme_mode", "system"))
+            put("pro_date_format", prefs.getString("pro_date_format", "d"))
+        }.toString(2)
+        startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/json"
+            putExtra(Intent.EXTRA_TITLE, "statusbarplus-backup.json")
+        }, 401)
     }
 
-    private fun showDisplayModeChooser() {
-        val choices = arrayOf(
-            getString(R.string.mode_day),
-            getString(R.string.mode_day_date),
-            getString(R.string.mode_day_date_month),
-            getString(R.string.mode_date_month)
-        )
-        val selected = when (prefs.getString("display_mode", "day")) {
-            "day_date" -> 1
-            "day_date_month" -> 2
-            "date_month" -> 3
-            else -> 0
+    private fun chooseBackup() {
+        startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/json"
+        }, 402)
+    }
+
+    private fun restoreBackup(uri: Uri) {
+        try {
+            val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException()
+            val obj = JSONObject(json)
+            val editor = prefs.edit()
+            if (obj.has("enabled")) editor.putBoolean("enabled", obj.getBoolean("enabled"))
+            if (obj.has("text_size")) editor.putFloat("text_size", obj.getDouble("text_size").toFloat().coerceIn(12f, 22f))
+            if (obj.has("short_day")) editor.putBoolean("short_day", obj.getBoolean("short_day"))
+            if (obj.has("font_key")) editor.putString("font_key", if (obj.getString("font_key") == "custom" && FontManager.hasCustomFont(this)) "custom" else "system")
+            if (obj.has("horizontal_offset")) editor.putInt("horizontal_offset", obj.getInt("horizontal_offset").coerceIn(-12, 12))
+            if (obj.has("vertical_offset")) editor.putInt("vertical_offset", obj.getInt("vertical_offset").coerceIn(-12, 12))
+            if (obj.has("layout_padding")) editor.putInt("layout_padding", obj.getInt("layout_padding").coerceIn(0, 12))
+            if (obj.has("line_spacing")) editor.putInt("line_spacing", obj.getInt("line_spacing").coerceIn(-4, 12))
+            if (obj.has("theme_mode")) editor.putString("theme_mode", obj.getString("theme_mode"))
+            if (obj.has("pro_date_format")) editor.putString("pro_date_format", obj.getString("pro_date_format"))
+            editor.putString("display_mode", "date_month").apply()
+            applyThemeMode()
+            if (prefs.getBoolean("enabled", false) && hasNotificationPermission()) DayNotificationManager.show(this) else DayNotificationManager.cancel(this)
+            recreate()
+            android.widget.Toast.makeText(this, getString(R.string.backup_restore_success), android.widget.Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            android.widget.Toast.makeText(this, getString(R.string.backup_restore_failed), android.widget.Toast.LENGTH_SHORT).show()
         }
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.display_mode_title))
-            .setSingleChoiceItems(choices, selected) { dialog, which ->
-                val mode = when (which) {
-                    1 -> "day_date"
-                    2 -> "day_date_month"
-                    3 -> "date_month"
-                    else -> "day"
-                }
-                prefs.edit().putString("display_mode", mode).apply()
-                displayModeButton.text = displayModeLabel()
-                DayNotificationManager.show(this)
-                updatePreview()
-                dialog.dismiss()
-            }
-            .show()
     }
 
     private fun fontLabel(): String =
@@ -547,24 +566,35 @@ class MainActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Android API; kept for compatibility with the app's minSdk.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != 300 || resultCode != RESULT_OK || data?.data == null) return
-        Thread {
-            val success = FontManager.importCustom(this, data.data!!)
-            runOnUiThread {
-                if (success) {
-                    prefs.edit().putString("font_key", "custom").apply()
-                    fontButton.text = fontLabel()
-                    DayNotificationManager.show(this)
-                    updatePreview()
-                } else {
-                    android.widget.Toast.makeText(
-                        this,
-                        getString(R.string.font_invalid),
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
+        if (resultCode != RESULT_OK || data?.data == null) return
+        when (requestCode) {
+            300 -> {
+                Thread {
+                    val success = FontManager.importCustom(this, data.data!!)
+                    runOnUiThread {
+                        if (success) {
+                            prefs.edit().putString("font_key", "custom").apply()
+                            fontButton.text = fontLabel()
+                            DayNotificationManager.show(this)
+                            updatePreview()
+                        } else {
+                            android.widget.Toast.makeText(this, getString(R.string.font_invalid), android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }.start()
+            }
+            401 -> {
+                try {
+                    contentResolver.openOutputStream(data.data!!)?.use { it.write((pendingBackupJson ?: "").toByteArray(Charsets.UTF_8)) }
+                    android.widget.Toast.makeText(this, getString(R.string.backup_create_success), android.widget.Toast.LENGTH_SHORT).show()
+                } catch (_: Exception) {
+                    android.widget.Toast.makeText(this, getString(R.string.backup_create_failed), android.widget.Toast.LENGTH_SHORT).show()
+                } finally {
+                    pendingBackupJson = null
                 }
             }
-        }.start()
+            402 -> restoreBackup(data.data!!)
+        }
     }
 
     private fun proDateFormatLabel(): String = when (prefs.getString("pro_date_format", "d")) {
