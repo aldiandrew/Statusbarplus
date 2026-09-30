@@ -15,7 +15,6 @@
     <string name="display_mode_title">Isi status bar</string>
     <string name="mode_day">Hari saja</string>
     <string name="mode_day_date">Hari + tanggal</string>
-    <string name="mode_day_date_month">Hari + tanggal + bulan</string>
     <string name="mode_date_month">Tanggal + bulan</string>
     <string name="theme_title">Tema aplikasi</string>
     <string name="theme_system">Sistem</string>
@@ -50,7 +49,6 @@
     <string name="font_invalid">File yang dipilih bukan font TTF/OTF yang valid.</string>
     <string name="show_day_body">Aktifkan atau nonaktifkan informasi kalender di status bar.</string>
     <string name="display_body">Pilih informasi yang ingin ditampilkan pada ikon status bar.</string>
-    <string name="mode_day_date_month">Hari + tanggal + bulan</string>
     <string name="theme_body">Pilih tampilan sistem, terang, atau gelap.</string>
     <string name="layout_title">Tata letak teks</string>
     <string name="layout_body">Atur offset, padding, dan jarak baris di dalam ikon notifikasi.</string>
