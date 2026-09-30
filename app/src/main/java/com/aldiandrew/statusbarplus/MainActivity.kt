@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import org.json.JSONObject
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.widget.Toast
 import android.provider.Settings
 import android.view.Gravity
 import android.widget.LinearLayout
@@ -18,8 +18,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -31,11 +31,16 @@ import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        private const val REQUEST_CREATE_BACKUP = 400
+        private const val REQUEST_RESTORE_BACKUP = 401
+    }
     private val prefs by lazy { getSharedPreferences("settings", Context.MODE_PRIVATE) }
     private lateinit var daySwitch: MaterialSwitch
     private lateinit var status: TextView
     private lateinit var preview: TextView
     private lateinit var sizeLabel: TextView
+    private lateinit var displayModeButton: MaterialButton
     private lateinit var backgroundButton: MaterialButton
     private lateinit var fontButton: MaterialButton
 
@@ -43,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         applyThemeMode()
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
+        migrateLegacyPreferences()
         configureSystemBars()
         buildUi()
         requestNotificationPermissionIfNeeded()
@@ -54,6 +60,19 @@ class MainActivity : AppCompatActivity() {
         if (::daySwitch.isInitialized) {
             updateState()
             updateBackgroundState()
+            updatePreview()
+        }
+    }
+
+    private fun migrateLegacyPreferences() {
+        prefs.edit()
+            .remove("date_format")
+            .remove("layout_preset")
+            .remove("text_alignment")
+            .apply()
+
+        if (prefs.getString("display_mode", "day") == "day_date_month") {
+            prefs.edit().putString("display_mode", "day_date").apply()
         }
     }
 
@@ -88,14 +107,23 @@ class MainActivity : AppCompatActivity() {
             MaterialToolbar(this).apply {
                 title = getString(R.string.app_name)
                 subtitle = getString(R.string.subtitle)
-                setTitleTextAppearance(this@MainActivity, com.google.android.material.R.style.TextAppearance_Material3_TitleLarge)
-                setSubtitleTextAppearance(this@MainActivity, com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                setTitleTextAppearance(
+                    this@MainActivity,
+                    com.google.android.material.R.style.TextAppearance_Material3_TitleLarge
+                )
+                setSubtitleTextAppearance(
+                    this@MainActivity,
+                    com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
+                )
                 elevation = 0f
             },
             LinearLayout.LayoutParams(-1, dp(64f))
         )
 
-        val scroll = ScrollView(this).apply { clipToPadding = false }
+        val scroll = ScrollView(this).apply {
+            clipToPadding = false
+            overScrollMode = ScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS
+        }
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16f), dp(8f), dp(16f), dp(20f))
@@ -107,8 +135,8 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.hero_title), 22f, true), lp())
-                    addView(text(getString(R.string.hero_body), 14f, false), lp(4))
-                    preview = text("", 18f, true).apply {
+                    addView(text(getString(R.string.hero_body), 14f, false), lp(8))
+                    preview = text("", 22f, true).apply {
                         gravity = Gravity.CENTER
                         setPadding(0, dp(12f), 0, dp(4f))
                     }
@@ -123,8 +151,13 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     daySwitch = MaterialSwitch(this@MainActivity).apply {
-                        text = getString(R.string.show_day)
-                        textSize = 16f
+                        // Material 3 switch without ON/OFF text labels.
+                        showText = false
+                        minWidth = dp(52f)
+                        minimumWidth = dp(52f)
+                        minHeight = dp(32f)
+                        minimumHeight = dp(32f)
+                        isChecked = prefs.getBoolean("enabled", false)
                         setOnCheckedChangeListener { _, checked -> setEnabled(checked) }
                     }
                     addView(daySwitch, lp())
@@ -150,22 +183,33 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.display_title), 17f, true), lp())
-                    addView(text(getString(R.string.display_body), 13f, false), lp(3))
+                    addView(text(getString(R.string.display_body), 13f, false), lp(8))
+                    displayModeButton = MaterialButton(this@MainActivity).apply {
+                        text = displayModeLabel()
+                        setOnClickListener { showDisplayModeChooser() }
+                    }
+                    addView(displayModeButton, lp(4))
                     sizeLabel = text("", 14f, true)
                     addView(sizeLabel, lp(8))
-                    addView(Slider(this@MainActivity).apply {
-                        valueFrom = 12f
-                        valueTo = 22f
-                        value = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
-                        stepSize = 1f
-                        addOnChangeListener { _, value, _ ->
-                            prefs.edit().putFloat("text_size", value).putString("display_mode", "date_month").apply()
-                            sizeLabel.text = getString(R.string.text_size, value.toInt())
-                            DayNotificationManager.show(this@MainActivity)
-                            updatePreview()
-                        }
-                    }, lp())
-                    sizeLabel.text = getString(R.string.text_size, prefs.getFloat("text_size", 20f).coerceIn(12f, 22f).toInt())
+                    addView(
+                        Slider(this@MainActivity).apply {
+                            valueFrom = 12f
+                            valueTo = 22f
+                            value = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
+                            stepSize = 1f
+                            addOnChangeListener { _, value, _ ->
+                                prefs.edit().putFloat("text_size", value).apply()
+                                sizeLabel.text = getString(R.string.text_size, value.toInt())
+                                DayNotificationManager.show(this@MainActivity)
+                                updatePreview()
+                            }
+                        },
+                        lp()
+                    )
+                    sizeLabel.text = getString(
+                        R.string.text_size,
+                        prefs.getFloat("text_size", 20f).coerceIn(12f, 22f).toInt()
+                    )
                 })
             },
             lp(10)
@@ -175,7 +219,7 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.font_title), 17f, true), lp())
-                    addView(text(getString(R.string.font_body), 13f, false), lp(3))
+                    addView(text(getString(R.string.font_body), 13f, false), lp(8))
                     fontButton = MaterialButton(this@MainActivity).apply {
                         text = fontLabel()
                         setOnClickListener { showFontChooser() }
@@ -190,89 +234,42 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.layout_title), 17f, true), lp())
-                    addView(text(getString(R.string.layout_body), 13f, false), lp(3))
+                    addView(text(getString(R.string.layout_body), 13f, false), lp(8))
+                    addLayoutSlider(this, R.string.horizontal_offset, "horizontal_offset", -12f, 12f, 0f)
+                    addLayoutSlider(this, R.string.vertical_offset, "vertical_offset", -12f, 12f, 0f)
+                    addLayoutSlider(this, R.string.layout_padding, "layout_padding", 0f, 18f, 4f)
+                    addLayoutSlider(this, R.string.line_spacing, "line_spacing", -6f, 12f, 0f)
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.reset_layout)
+                            setOnClickListener { resetTextLayout() }
+                        },
+                        lp(10)
+                    )
+                })
+            },
+            lp(10)
+        )
 
-                    addView(text(getString(R.string.horizontal_offset), 13f, true), lp(8))
-                    val horizontalLabel = text("", 12f, false)
-                    addView(horizontalLabel, lp(2))
-                    addView(Slider(this@MainActivity).apply {
-                        valueFrom = -12f
-                        valueTo = 12f
-                        stepSize = 1f
-                        value = prefs.getInt("horizontal_offset", 0).toFloat()
-                        horizontalLabel.text = getString(R.string.offset_value, value.toInt())
-                        addOnChangeListener { _, value, _ ->
-                            prefs.edit().putInt("horizontal_offset", value.toInt()).apply()
-                            horizontalLabel.text = getString(R.string.offset_value, value.toInt())
-                            DayNotificationManager.show(this@MainActivity)
-                            updatePreview()
-                        }
-                    }, lp())
-
-                    addView(text(getString(R.string.vertical_offset), 13f, true), lp(6))
-                    val verticalLabel = text("", 12f, false)
-                    addView(verticalLabel, lp(2))
-                    addView(Slider(this@MainActivity).apply {
-                        valueFrom = -12f
-                        valueTo = 12f
-                        stepSize = 1f
-                        value = prefs.getInt("vertical_offset", 0).toFloat()
-                        verticalLabel.text = getString(R.string.offset_value, value.toInt())
-                        addOnChangeListener { _, value, _ ->
-                            prefs.edit().putInt("vertical_offset", value.toInt()).apply()
-                            verticalLabel.text = getString(R.string.offset_value, value.toInt())
-                            DayNotificationManager.show(this@MainActivity)
-                            updatePreview()
-                        }
-                    }, lp())
-
-                    addView(text(getString(R.string.layout_padding), 13f, true), lp(6))
-                    val paddingLabel = text("", 12f, false)
-                    addView(paddingLabel, lp(2))
-                    addView(Slider(this@MainActivity).apply {
-                        valueFrom = 0f
-                        valueTo = 12f
-                        stepSize = 1f
-                        value = prefs.getInt("layout_padding", 0).toFloat()
-                        paddingLabel.text = getString(R.string.padding_value, value.toInt())
-                        addOnChangeListener { _, value, _ ->
-                            prefs.edit().putInt("layout_padding", value.toInt()).apply()
-                            paddingLabel.text = getString(R.string.padding_value, value.toInt())
-                            DayNotificationManager.show(this@MainActivity)
-                            updatePreview()
-                        }
-                    }, lp())
-
-                    addView(text(getString(R.string.line_spacing), 13f, true), lp(6))
-                    val spacingLabel = text("", 12f, false)
-                    addView(spacingLabel, lp(2))
-                    addView(Slider(this@MainActivity).apply {
-                        valueFrom = -4f
-                        valueTo = 12f
-                        stepSize = 1f
-                        value = prefs.getInt("line_spacing", 0).toFloat()
-                        spacingLabel.text = getString(R.string.spacing_value, value.toInt())
-                        addOnChangeListener { _, value, _ ->
-                            prefs.edit().putInt("line_spacing", value.toInt()).apply()
-                            spacingLabel.text = getString(R.string.spacing_value, value.toInt())
-                            DayNotificationManager.show(this@MainActivity)
-                            updatePreview()
-                        }
-                    }, lp())
-
-                    addView(MaterialButton(this@MainActivity).apply {
-                        text = getString(R.string.reset_layout)
-                        setOnClickListener {
-                            prefs.edit()
-                                .putInt("horizontal_offset", 0)
-                                .putInt("vertical_offset", 0)
-                                .putInt("layout_padding", 0)
-                                .putInt("line_spacing", 0)
-                                .apply()
-                            DayNotificationManager.show(this@MainActivity)
-                            recreate()
-                        }
-                    }, lp(6))
+        content.addView(
+            card().apply {
+                addView(box().apply {
+                    addView(text(getString(R.string.backup_title), 17f, true), lp())
+                    addView(text(getString(R.string.backup_body), 13f, false), lp(8))
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.backup_create)
+                            setOnClickListener { createBackup() }
+                        },
+                        lp(8)
+                    )
+                    addView(
+                        MaterialButton(this@MainActivity).apply {
+                            text = getString(R.string.backup_restore)
+                            setOnClickListener { chooseBackupToRestore() }
+                        },
+                        lp(4)
+                    )
                 })
             },
             lp(10)
@@ -282,7 +279,7 @@ class MainActivity : AppCompatActivity() {
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.background_title), 17f, true), lp())
-                    addView(text(getString(R.string.background_body), 13f, false), lp(3))
+                    addView(text(getString(R.string.background_body), 13f, false), lp(8))
                     backgroundButton = MaterialButton(this@MainActivity).apply {
                         setOnClickListener { requestBatteryExemption() }
                     }
@@ -292,44 +289,11 @@ class MainActivity : AppCompatActivity() {
             lp(10)
         )
 
-        if (BuildConfig.IS_PRO) {
-            content.addView(
-                card().apply {
-                    addView(box().apply {
-                        addView(text(getString(R.string.pro_format_title), 17f, true), lp())
-                        addView(text(getString(R.string.pro_format_body), 13f, false), lp(3))
-                        addView(MaterialButton(this@MainActivity).apply {
-                            text = proDateFormatLabel()
-                            setOnClickListener { showProDateFormatChooser() }
-                        }, lp(8))
-                    })
-                },
-                lp(10)
-            )
-        }
-
-        content.addView(
-            card().apply {
-                addView(box().apply {
-                    addView(text(getString(R.string.backup_title), 17f, true), lp())
-                    addView(text(getString(R.string.backup_body), 13f, false), lp(3))
-                    addView(MaterialButton(this@MainActivity).apply {
-                        text = getString(R.string.backup_create)
-                        setOnClickListener { createBackup() }
-                    }, lp(8))
-                    addView(MaterialButton(this@MainActivity).apply {
-                        text = getString(R.string.backup_restore)
-                        setOnClickListener { chooseBackup() }
-                    }, lp(2))
-                })
-            },
-            lp(10)
-        )
-
         content.addView(
             card().apply {
                 addView(box().apply {
                     addView(text(getString(R.string.theme_title), 17f, true), lp())
+                    addView(text(getString(R.string.theme_body), 13f, false), lp(8))
                     addView(MaterialButton(this@MainActivity).apply {
                         text = themeLabel()
                         setOnClickListener { showThemeChooser() }
@@ -344,6 +308,67 @@ class MainActivity : AppCompatActivity() {
         updateState()
         updateBackgroundState()
     }
+
+    private fun addLayoutSlider(
+        parent: LinearLayout,
+        labelRes: Int,
+        key: String,
+        min: Float,
+        max: Float,
+        default: Float
+    ) {
+        val valueLabel = text("", 13f, true)
+        parent.addView(text(getString(labelRes), 13f, false), lp(10))
+        parent.addView(valueLabel, lp(2))
+        parent.addView(
+            Slider(this).apply {
+                valueFrom = min
+                valueTo = max
+                stepSize = 1f
+                value = prefs.getFloat(key, default).coerceIn(min, max)
+                valueLabel.text = layoutValue(key, value)
+                addOnChangeListener { _, newValue, _ ->
+                    prefs.edit().putFloat(key, newValue).apply()
+                    valueLabel.text = layoutValue(key, newValue)
+                    DayNotificationManager.show(this@MainActivity)
+                    updatePreview()
+                }
+            },
+            lp()
+        )
+    }
+
+    private fun resetTextLayout() {
+        prefs.edit()
+            .putFloat("horizontal_offset", 0f)
+            .putFloat("vertical_offset", 0f)
+            .putFloat("layout_padding", 4f)
+            .putFloat("line_spacing", 0f)
+            .apply()
+        DayNotificationManager.show(this)
+        recreate()
+    }
+
+    private fun layoutValue(key: String, value: Float): String = when (key) {
+        "layout_padding" -> getString(R.string.padding_value, value.toInt())
+        "line_spacing" -> getString(R.string.spacing_value, value.toInt())
+        else -> getString(R.string.offset_value, value.toInt())
+    }
+
+    private fun listRow(title: String, subtitle: String): LinearLayout =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16f), dp(14f), dp(10f), dp(10f))
+            addView(
+                LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    addView(text(title, 17f, true), lp())
+                    addView(text(subtitle, 13f, false), lp(2))
+                },
+                LinearLayout.LayoutParams(0, -2, 1f)
+            )
+        }
 
     private fun setEnabled(enabled: Boolean) {
         if (enabled && !hasNotificationPermission()) {
@@ -371,10 +396,19 @@ class MainActivity : AppCompatActivity() {
     private fun updatePreview() {
         if (!::preview.isInitialized) return
         val locale = Locale.getDefault()
-        val date = SimpleDateFormat("d", locale).format(Date())
-        val month = SimpleDateFormat("MMM", locale).format(Date())
-        preview.text = "$date\n$month"
-        preview.typeface = android.graphics.Typeface.create(FontManager.getTypeface(this), android.graphics.Typeface.BOLD)
+        val now = Date()
+        val day = SimpleDateFormat("EEE", locale).format(now)
+        val date = SimpleDateFormat("d", locale).format(now)
+        val month = SimpleDateFormat("MMM", locale).format(now)
+        preview.text = when (prefs.getString("display_mode", "day")) {
+            "day_date" -> "$day\n$date"
+            "date_month" -> "$date\n$month"
+            else -> day
+        }
+        preview.typeface = android.graphics.Typeface.create(
+            FontManager.getTypeface(this),
+            android.graphics.Typeface.BOLD
+        )
         preview.textSize = prefs.getFloat("text_size", 20f).coerceIn(12f, 22f)
     }
 
@@ -386,9 +420,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(R.string.guide_title))
             .setMessage(getString(R.string.guide_body))
             .setPositiveButton(getString(R.string.guide_continue)) { _, _ ->
-                if (!hasNotificationPermission()) {
-                    requestNotificationPermissionIfNeeded()
-                }
+                if (!hasNotificationPermission()) requestNotificationPermissionIfNeeded()
             }
             .setNegativeButton(getString(R.string.guide_later), null)
             .show()
@@ -398,11 +430,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                100
-            )
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
         }
     }
 
@@ -412,8 +440,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
-        val pm = getSystemService(PowerManager::class.java)
-        return pm.isIgnoringBatteryOptimizations(packageName)
+        return getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)
     }
 
     private fun updateBackgroundState() {
@@ -430,14 +457,68 @@ class MainActivity : AppCompatActivity() {
     private fun requestBatteryExemption() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         try {
-            startActivity(
-                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-            )
+            startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            })
         } catch (_: Exception) {
             startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         }
+    }
+
+    private fun createBackup() {
+        startActivityForResult(
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/zip"
+                putExtra(Intent.EXTRA_TITLE, "Statusbarplus-backup.zip")
+            },
+            REQUEST_CREATE_BACKUP
+        )
+    }
+
+    private fun chooseBackupToRestore() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/zip"
+            },
+            REQUEST_RESTORE_BACKUP
+        )
+    }
+
+    private fun restoreBackupWithConfirmation(uri: Uri) {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.backup_restore_confirm_title))
+            .setMessage(getString(R.string.backup_restore_confirm_body))
+            .setNegativeButton(getString(R.string.guide_later), null)
+            .setPositiveButton(getString(R.string.backup_restore_confirm)) { _, _ ->
+                Thread {
+                    val success = BackupManager.restoreBackup(this, uri)
+                    runOnUiThread {
+                        if (success) {
+                            if (prefs.getBoolean("enabled", false) && hasNotificationPermission()) {
+                                DayNotificationManager.show(this)
+                            } else {
+                                DayNotificationManager.cancel(this)
+                            }
+                            Toast.makeText(
+                                this,
+                                getString(R.string.backup_restore_success),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            applyThemeMode()
+                            recreate()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.backup_restore_failed),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }.start()
+            }
+            .show()
     }
 
     private fun showThemeChooser() {
@@ -451,7 +532,7 @@ class MainActivity : AppCompatActivity() {
             "dark" -> 2
             else -> 0
         }
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.theme_title))
             .setSingleChoiceItems(choices, selected) { dialog, which ->
                 prefs.edit().putString(
@@ -469,60 +550,38 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-
-    private var pendingBackupJson: String? = null
-
-    private fun createBackup() {
-        pendingBackupJson = JSONObject().apply {
-            put("version", 1)
-            put("enabled", prefs.getBoolean("enabled", false))
-            put("text_size", prefs.getFloat("text_size", 20f).toDouble())
-            put("short_day", prefs.getBoolean("short_day", true))
-            put("font_key", prefs.getString("font_key", "system"))
-            put("horizontal_offset", prefs.getInt("horizontal_offset", 0))
-            put("vertical_offset", prefs.getInt("vertical_offset", 0))
-            put("layout_padding", prefs.getInt("layout_padding", 0))
-            put("line_spacing", prefs.getInt("line_spacing", 0))
-            put("theme_mode", prefs.getString("theme_mode", "system"))
-            put("pro_date_format", prefs.getString("pro_date_format", "d"))
-        }.toString(2)
-        startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/json"
-            putExtra(Intent.EXTRA_TITLE, "statusbarplus-backup.json")
-        }, 401)
+    private fun displayModeLabel(): String = when (prefs.getString("display_mode", "day")) {
+        "day_date" -> getString(R.string.mode_day_date)
+        "date_month" -> getString(R.string.mode_date_month)
+        else -> getString(R.string.mode_day)
     }
 
-    private fun chooseBackup() {
-        startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/json"
-        }, 402)
-    }
-
-    private fun restoreBackup(uri: Uri) {
-        try {
-            val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException()
-            val obj = JSONObject(json)
-            val editor = prefs.edit()
-            if (obj.has("enabled")) editor.putBoolean("enabled", obj.getBoolean("enabled"))
-            if (obj.has("text_size")) editor.putFloat("text_size", obj.getDouble("text_size").toFloat().coerceIn(12f, 22f))
-            if (obj.has("short_day")) editor.putBoolean("short_day", obj.getBoolean("short_day"))
-            if (obj.has("font_key")) editor.putString("font_key", if (obj.getString("font_key") == "custom" && FontManager.hasCustomFont(this)) "custom" else "system")
-            if (obj.has("horizontal_offset")) editor.putInt("horizontal_offset", obj.getInt("horizontal_offset").coerceIn(-12, 12))
-            if (obj.has("vertical_offset")) editor.putInt("vertical_offset", obj.getInt("vertical_offset").coerceIn(-12, 12))
-            if (obj.has("layout_padding")) editor.putInt("layout_padding", obj.getInt("layout_padding").coerceIn(0, 12))
-            if (obj.has("line_spacing")) editor.putInt("line_spacing", obj.getInt("line_spacing").coerceIn(-4, 12))
-            if (obj.has("theme_mode")) editor.putString("theme_mode", obj.getString("theme_mode"))
-            if (obj.has("pro_date_format")) editor.putString("pro_date_format", obj.getString("pro_date_format"))
-            editor.putString("display_mode", "date_month").apply()
-            applyThemeMode()
-            if (prefs.getBoolean("enabled", false) && hasNotificationPermission()) DayNotificationManager.show(this) else DayNotificationManager.cancel(this)
-            recreate()
-            android.widget.Toast.makeText(this, getString(R.string.backup_restore_success), android.widget.Toast.LENGTH_SHORT).show()
-        } catch (_: Exception) {
-            android.widget.Toast.makeText(this, getString(R.string.backup_restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+    private fun showDisplayModeChooser() {
+        val choices = arrayOf(
+            getString(R.string.mode_day),
+            getString(R.string.mode_day_date),
+            getString(R.string.mode_date_month)
+        )
+        val selected = when (prefs.getString("display_mode", "day")) {
+            "day_date" -> 1
+            "date_month" -> 2
+            else -> 0
         }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.display_mode_title))
+            .setSingleChoiceItems(choices, selected) { dialog, which ->
+                val mode = when (which) {
+                    1 -> "day_date"
+                    2 -> "date_month"
+                    else -> "day"
+                }
+                prefs.edit().putString("display_mode", mode).apply()
+                displayModeButton.text = displayModeLabel()
+                DayNotificationManager.show(this)
+                updatePreview()
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun fontLabel(): String =
@@ -567,6 +626,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != RESULT_OK || data?.data == null) return
+
         when (requestCode) {
             300 -> {
                 Thread {
@@ -578,60 +638,32 @@ class MainActivity : AppCompatActivity() {
                             DayNotificationManager.show(this)
                             updatePreview()
                         } else {
-                            android.widget.Toast.makeText(this, getString(R.string.font_invalid), android.widget.Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                getString(R.string.font_invalid),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }.start()
             }
-            401 -> {
-                try {
-                    contentResolver.openOutputStream(data.data!!)?.use { it.write((pendingBackupJson ?: "").toByteArray(Charsets.UTF_8)) }
-                    android.widget.Toast.makeText(this, getString(R.string.backup_create_success), android.widget.Toast.LENGTH_SHORT).show()
-                } catch (_: Exception) {
-                    android.widget.Toast.makeText(this, getString(R.string.backup_create_failed), android.widget.Toast.LENGTH_SHORT).show()
-                } finally {
-                    pendingBackupJson = null
-                }
+            REQUEST_CREATE_BACKUP -> {
+                Thread {
+                    val success = BackupManager.writeBackup(this, data.data!!)
+                    runOnUiThread {
+                        Toast.makeText(
+                            this,
+                            if (success) getString(R.string.backup_create_success)
+                            else getString(R.string.backup_create_failed),
+                            if (success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }.start()
             }
-            402 -> restoreBackup(data.data!!)
+            REQUEST_RESTORE_BACKUP -> restoreBackupWithConfirmation(data.data!!)
         }
     }
 
-    private fun proDateFormatLabel(): String = when (prefs.getString("pro_date_format", "d")) {
-        "dd" -> getString(R.string.pro_format_dd)
-        "d MMM" -> getString(R.string.pro_format_d_mmm)
-        "dd MMM" -> getString(R.string.pro_format_dd_mmm)
-        else -> getString(R.string.pro_format_d)
-    }
-
-    private fun showProDateFormatChooser() {
-        val choices = arrayOf(
-            getString(R.string.pro_format_d),
-            getString(R.string.pro_format_dd),
-            getString(R.string.pro_format_d_mmm),
-            getString(R.string.pro_format_dd_mmm)
-        )
-        val selected = when (prefs.getString("pro_date_format", "d")) {
-            "dd" -> 1
-            "d MMM" -> 2
-            "dd MMM" -> 3
-            else -> 0
-        }
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.pro_format_title))
-            .setSingleChoiceItems(choices, selected) { dialog, which ->
-                val format = when (which) {
-                    1 -> "dd"
-                    2 -> "d MMM"
-                    3 -> "dd MMM"
-                    else -> "d"
-                }
-                prefs.edit().putString("pro_date_format", format).apply()
-                DayNotificationManager.show(this)
-                dialog.dismiss()
-            }
-            .show()
-    }
 
     private fun themeLabel() = when (prefs.getString("theme_mode", "system")) {
         "light" -> getString(R.string.theme_light)
